@@ -1,5 +1,5 @@
 {
-	"name": "@inlang/template-plugin",
+	"name": "inlang-t-function-jsx-hybrid-matcher",
 	"private": true,
 	"version": "0.1.0",
 	"type": "module",
@@ -21,6 +21,7 @@
 	},
 	"dependencies": {
 		"@inlang/plugin": "^2.4.13",
+		"@sinclair/typebox": "^0.31.17",
 		"parsimmon": "^1.18.1"
 	},
 	"pnpm": {

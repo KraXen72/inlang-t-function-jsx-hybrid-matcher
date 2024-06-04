@@ -1,10 +1,10 @@
 {
 	"$schema": "https://inlang.com/schema/marketplace-manifest",
-	"id": "plugin.organization.pluginName",
+	"id": "plugin.minibits.t-function-jsx-hybrid-matcher",
 	"displayName": {
-		"en": "TODO"
+		"en": "t-function JSX hybrid matcher"
 	},
 	"description": {
-		"en": "TODO"
+		"en": "t-function JSX hybrid matcher"
 	}
 }
