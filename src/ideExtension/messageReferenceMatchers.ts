@@ -78,6 +78,7 @@ export function createMessageReferenceParser(translateFunctionNames: string[]) {
 			)
 		},
 	})
+
 	return parser
 }
 
