@@ -13,6 +13,12 @@ export const PluginSettings = Type.Object({
 		description: 'Array of recognized t("key") function names (to show inline previews of messages)',
 		default: ["t"],
 		examples: ["t", "translate", "i18n.t"]
+	})),
+	recognizedJSXAttributes: Type.Optional(Type.Array(Type.String(), {
+		title: "Recognized JSX attributes",
+		description: "which JSX attributes should be recognized as translate ones",
+		default: [],
+		examples: ["tx", "subTx"]
 	}))
 })
 export type PluginSettings = Static<typeof PluginSettings>
