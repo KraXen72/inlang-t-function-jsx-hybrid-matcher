@@ -1,0 +1,14 @@
+diff --git a/package.json b/package.json
+index 46172287fc009ee2bcf61cc4366bd9bc6b673433..4a1d2cb3b57ff2e22081b156c353a0549ac4716f 100644
+--- a/package.json
++++ b/package.json
+@@ -8,6 +8,9 @@
+     "parsers",
+     "parser combinators"
+   ],
++  "exports": {
++    ".": "./src/parsimmon.js"
++  },
+   "author": "Jeanine Adkisson <jneen at jneen dot net>",
+   "contributors": [
+     "Brian Mock <brian@mockbrian.com>"

@@ -1,0 +1,31 @@
+{
+	"name": "@inlang/template-plugin",
+	"private": true,
+	"version": "0.1.0",
+	"type": "module",
+	"files": [
+		"./dist"
+	],
+	"scripts": {
+		"build": "inlang module build --entry ./src/index.ts",
+		"dev": "inlang module build --entry ./src/index.ts --watch",
+		"test": "tsc --noEmit && vitest run"
+	},
+	"devDependencies": {
+		"@inlang/cli": "^2.18.1",
+		"@inlang/sdk": "^0.35.7",
+		"@lix-js/client": "^2.2.0",
+		"@types/parsimmon": "^1.10.9",
+		"typescript": "^5.2.2",
+		"vitest": "^0.34.4"
+	},
+	"dependencies": {
+		"@inlang/plugin": "^2.4.13",
+		"parsimmon": "^1.18.1"
+	},
+	"pnpm": {
+		"patchedDependencies": {
+			"parsimmon@1.18.1": "patches/parsimmon@1.18.1.patch"
+		}
+	}
+}
