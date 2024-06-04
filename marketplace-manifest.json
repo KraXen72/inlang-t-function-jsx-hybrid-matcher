@@ -1,6 +1,6 @@
 {
 	"$schema": "https://inlang.com/schema/marketplace-manifest",
-	"id": "plugin.minibits.t-function-jsx-hybrid-matcher",
+	"id": "plugin.minibits.inlangmatcher",
 	"displayName": {
 		"en": "t-function JSX hybrid matcher"
 	},

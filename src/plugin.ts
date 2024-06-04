@@ -3,7 +3,7 @@ import { displayName, description } from "../marketplace-manifest.json"
 import { PluginSettings } from "./settings.js"
 import { ideExtensionConfig } from "./ideExtension/config.js"
 
-const id = "plugin.minibits.t-function-jsx-hybrid-matcher"
+const id = "plugin.minibits.inlangmatcher"
 
 export const plugin: Plugin<{
 	[id]: PluginSettings
@@ -12,5 +12,5 @@ export const plugin: Plugin<{
 	displayName,
 	description,
 	settingsSchema: PluginSettings,
-	addCustomApi: ({ settings }) => ideExtensionConfig(settings["plugin.minibits.t-function-jsx-hybrid-matcher"]),
+	addCustomApi: ({ settings }) => ideExtensionConfig(settings["plugin.minibits.inlangmatcher"]),
 }
