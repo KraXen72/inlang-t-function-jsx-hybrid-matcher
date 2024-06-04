@@ -1,16 +1,17 @@
-import { IPluginSettings } from "../settings.js"
+import { PluginSettings } from "../settings.js"
 import { parse } from "./messageReferenceMatchers.js"
 import type { CustomApiInlangIdeExtension, Plugin } from "@inlang/plugin"
 
 export const ideExtensionConfig = (
-	settings: IPluginSettings
+	settings: PluginSettings
 ): ReturnType<Exclude<Plugin["addCustomApi"], undefined>> => ({
 	"app.inlang.ideExtension": {
 		messageReferenceMatchers: [
 			async (args: { documentText: string }) => {
-				return parse(args.documentText)
+				return parse(args.documentText, settings)
 			},
 		],
+		
 		extractMessageOptions: [
 			{
 				callback: (args: { messageId: string }) => ({
@@ -21,13 +22,13 @@ export const ideExtensionConfig = (
 			{
 				callback: (args: { messageId: string }) => ({
 					messageId: args.messageId,
-					messageReplacement: `${settings.preferredTfuncName}("${args.messageId}")`,
+					messageReplacement: `${settings?.preferredTfuncName ?? 't'}("${args.messageId}")`,
 				}),
 			},
 			{
 				callback: (args: { messageId: string }) => ({
 					messageId: args.messageId,
-					messageReplacement: `{${settings.preferredTfuncName}("${args.messageId}")}`,
+					messageReplacement: `{${settings?.preferredTfuncName ?? 't'}("${args.messageId}")}`,
 				}),
 			}
 		],
