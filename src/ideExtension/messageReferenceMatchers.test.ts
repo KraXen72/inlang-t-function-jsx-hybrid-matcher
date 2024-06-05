@@ -3,8 +3,35 @@ import { parse } from "./messageReferenceMatchers.js"
 import type { PluginSettings } from "../settings.js"
 
 let settings: PluginSettings = {
-	preferredTfuncName: 't'
+	preferredTfuncName: 't',
+	recognizedJSXAttributes: ['tx', 'subTx']
 }
+
+// jsx stuff
+it("should detect a tx attribute in a JSX element", async () => {
+	const sourceCode = `
+		const Custom404 = () => {
+			return (
+				<Text 
+					className="flex h-screen items-center justify-center"
+					tx="notFound.title"
+				>
+					<Image
+						src="/icons/warning.svg"
+						height={25}
+						width={25}
+					/>
+				</Text>
+			)
+		};
+		`
+	const matches = parse(sourceCode, settings)
+	console.log(matches)
+	expect(matches).toHaveLength(1)
+	expect(matches[0]?.messageId).toBe("notFound.title")
+})
+
+// t-function stuff
 
 it("should not match a function that ends with t but is not a t function", async () => {
 	const sourceCode = `
@@ -126,3 +153,4 @@ it("should work on a production JSX example", async () => {
 	expect(matches[1]?.messageId).toBe("404.title")
 	expect(matches[2]?.messageId).toBe("421.message")
 })
+
