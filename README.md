@@ -15,4 +15,5 @@ https://cdn.jsdelivr.net/gh/KraXen72/inlang-t-function-jsx-hybrid-matcher/dist/i
 dev: (just for me, so i dont' forget)
 ```
 "D:/coding/node-deno/inlang-t-function-jsx-hybrid-matcher/dist/index.js"
+"/media/win/coding/node-deno/inlang-t-function-jsx-hybrid-matcher/dist/index.js"
 ```
