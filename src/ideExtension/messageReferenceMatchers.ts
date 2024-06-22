@@ -53,14 +53,14 @@ export function createMessageReferenceParser(translateFunctionNames: string[], j
 		FunctionCall: function (r) {
 			return Parsimmon.seqMap(
 				Parsimmon.regex(/[^a-zA-Z0-9]/), // no preceding letters or numbers
-				Parsimmon.alt(...translateFunctionNames.map(Parsimmon.string)), // support multiple translate function
-				Parsimmon.string("("), // then an opening parenthesis
+				Parsimmon.alt(...(translateFunctionNames.map((fname) => Parsimmon.string(fname).skip(Parsimmon.string("("))))), 
 				Parsimmon.index, // start position of the message id
 				r.stringLiteral!, // message id
 				Parsimmon.index, // end position of the message id
 				Parsimmon.regex(/[^)]*/), // ignore the rest of the function call
 				Parsimmon.string(")"), // end with a closing parenthesis
-				(_, __, ___, start, messageId, end) => {
+				(_, __,start, messageId, end) => {
+					console.log("tfunc", __)
 					return {
 						messageId,
 						position: {
