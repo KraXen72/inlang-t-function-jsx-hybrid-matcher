@@ -1,10 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /**
  * Using parsimmon because:
- *
- * 1. Chevrotain is too complicated.
- * 2. TypeScript's compiler doesn't work in the browser.
- * 3. TypeScripts compiler
+ * inlang said so :pensive:
  */
 import Parsimmon from "parsimmon"
 import type { PluginSettings } from "../settings.js"
@@ -110,6 +107,10 @@ export function createMessageReferenceParser(translateFunctionNames: string[], j
 									line: start.line,
 									character: start.column + value.length + 3
 								}
+
+								// this caused a hard-to-debug bug in vscode
+								// https://github.com/microsoft/vscode/blob/b6924a1d2e5249f97d1a5e6d3a1ad0edb2e33544/src/vs/workbench/api/common/extHostTypes.ts#L162
+								// basically, it would set it to the 0th character of the next line
 								// end: {
 								// 	line: end.line,
 								// 	character: end.column,
