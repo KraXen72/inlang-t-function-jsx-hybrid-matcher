@@ -9,6 +9,31 @@ let settings: PluginSettings = {
 };
 
 const sourceCode = `
+import {observer} from 'mobx-react-lite'
+import React, {FC, useEffect, useState} from 'react'
+import {Switch, TextStyle, View, ViewStyle} from 'react-native'
+import {colors, spacing, useThemeColor} from '../theme'
+import {SettingsStackScreenProps} from '../navigation'
+import {
+  ListItem,
+  Screen,
+  Text,
+  Card,
+  Loading,
+  ErrorModal,
+  InfoModal,
+  BottomModal,
+  Button,
+} from '../components'
+import {useHeader} from '../utils/useHeader'
+import {useStores} from '../models'
+import AppError from '../utils/AppError'
+import EventEmitter from '../utils/eventEmitter'
+import {ResultModalInfo} from './Wallet/ResultModalInfo'
+import {Database, log, WalletTask, WalletTaskResult} from '../services'
+import { getSnapshot } from 'mobx-state-tree'
+import { translate } from '../i18n'
+
 export const BackupScreen: FC<SettingsStackScreenProps<'Backup'>> = observer(function BackupScreen(_props) {
     const {navigation} = _props
     useHeader({
@@ -279,6 +304,37 @@ export const BackupScreen: FC<SettingsStackScreenProps<'Backup'>> = observer(fun
     )
   },
 )
+
+const $screen: ViewStyle = {}
+
+const $headerContainer: TextStyle = {
+  alignItems: 'center',
+  padding: spacing.medium,
+  height: spacing.screenHeight * 0.1,
+}
+
+const $contentContainer: TextStyle = {
+  // flex: 1,
+  padding: spacing.extraSmall,
+  // alignItems: 'center',
+}
+
+const $card: ViewStyle = {
+  marginBottom: spacing.small,
+}
+
+const $item: ViewStyle = {
+  paddingHorizontal: spacing.small,
+  paddingLeft: 0,
+}
+
+const $rightContainer: ViewStyle = {
+  // padding: spacing.extraSmall,
+  // alignSelf: 'center',
+  marginLeft: spacing.tiny,
+  marginRight: -10
+}
+
 `
 it("should detect backupscreen tx and subTx keys properly", async () => {
 	const matches = parse(sourceCode, settings);
@@ -287,8 +343,13 @@ it("should detect backupscreen tx and subTx keys properly", async () => {
 	for (const match of matches) {
 		const lineStart = match.position.start.line - 1;
 		const lineEnd = match.position.end.line - 1;
-		const slice = lines[lineStart].slice(match.position.start.character) + lines[lineEnd].slice(0, match.position.end.character);
-		console.log(">", match.messageId, slice, match.position.start, match.position.end);
+		let slice: string;
+		if (lineStart !== lineEnd) {
+			slice = lines[lineStart].slice(match.position.start.character) + lines[lineEnd].slice(0, match.position.end.character);
+		} else {
+			slice = lines[lineStart].slice(match.position.start.character, match.position.end.character);
+		}
+		console.log(">", match.messageId, match.position.start, match.position.end, "\n>>",`'${slice}'`, "\n");
 	}
 	// expect(matches).toHaveLength(1);
 	// expect(matches[0]?.messageId).toBe("notFound.title");

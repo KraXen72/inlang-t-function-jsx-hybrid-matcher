@@ -84,10 +84,11 @@ export function createMessageReferenceParser(translateFunctionNames: string[], j
 				Parsimmon.regex(/\s+/), // skip whitespace
 				Parsimmon.sepBy1(
 					Parsimmon.seq(
-						Parsimmon.regex(/\w+/).skip(Parsimmon.regex(/\s*=\s*/)), // attribute name followed by equal sign
+						Parsimmon.regex(/\w+/) // attribute name
+							.skip(Parsimmon.regex(/\s*=\s*/)), // equal sign
 						Parsimmon.index,
 						r.stringLiteral, // attribute value
-						Parsimmon.index
+						Parsimmon.index // skip whitespace after attribute value
 					),
 					Parsimmon.regex(/\s+/) // skip whitespace between attributes
 				),
@@ -106,9 +107,13 @@ export function createMessageReferenceParser(translateFunctionNames: string[], j
 									character: start.column,
 								},
 								end: {
-									line: end.line,
-									character: end.column,
-								},
+									line: start.line,
+									character: start.column + value.length + 3
+								}
+								// end: {
+								// 	line: end.line,
+								// 	character: end.column,
+								// },
 							},
 						})
 					}

@@ -40,7 +40,7 @@ it("should detect a subTx attribute in a JSX element", async () => {
 			return (
 				<Header 
 					className="flex h-screen items-center justify-center"
-					subTx="wallet.description"
+					subTx="wallet.description"   
 				>
 					<Text text="ayuka" />
 				</Header>
