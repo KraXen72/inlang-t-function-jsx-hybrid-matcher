@@ -1,0 +1,63 @@
+just to give you an idea, you need something like:
+
+```ts
+		JSXAttribute: function (r) {
+			console.log("JSX Attribute parser called");
+			return Parsimmon.seqMap(
+				Parsimmon.string("<"),
+				Parsimmon.regex(/[A-Z][\w-]*/), // JSX component name (allowing hyphens)
+				Parsimmon.regex(/\s+/), // skip whitespace
+				Parsimmon.sepBy1(
+					Parsimmon.seq(
+						Parsimmon.regex(/\w+/).skip(Parsimmon.regex(/\s*=\s*/)), // attribute name followed by equal sign
+						r.stringLiteral // attribute value
+					),
+					Parsimmon.regex(/\s+/) // skip whitespace between attributes
+				),
+				(_, componentName, __, attributesRaw) => {
+					console.log("ComponentName:", componentName);
+					console.log("Attributes:", attributesRaw);
+					// Convert attributes to array of objects
+					const attributes = attributesRaw.map(([name, value]) => ({ name, value }));
+					console.log("Attributes in object:", attributes);
+					// Check if any attribute is 'tx' and extract the message ID
+					const txAttribute = attributes.find(attr => attr.name === "tx");
+					console.log("Tx attribute:", txAttribute);
+					if (txAttribute) {
+						const { value: attributeValue } = txAttribute;
+						console.log("Message ID:", attributeValue);
+                        // Find the start and end positions of the tx attribute
+                        const startIndex = sourceCode.indexOf(attributeValue);
+                        if (startIndex !== -1) {
+                            const linesBefore = sourceCode.slice(0, startIndex).split('\n');
+                            const startLine = linesBefore.length - 1;
+                            const startCharacter = linesBefore[startLine].length;
+                            const linesInValue = attributeValue.split('\n').length - 1;
+                            const endLine = startLine + linesInValue;
+                            const endCharacter = endLine === startLine ? startCharacter + attributeValue.length : attributeValue.lastIndexOf('\n') + 1;
+                            console.log({
+                                messageId: attributeValue,
+                                position: {
+                                    start: { line: startLine, character: startCharacter },
+                                    end: { line: endLine, character: endCharacter + attributeValue.length },
+                                },
+                            });
+                            
+                            return {
+                                messageId: attributeValue,
+                                position: {
+                                    start: { line: startLine, character: startCharacter },
+                                    end: { line: endLine, character: endCharacter + attributeValue.length },
+                                },
+                            };
+                        } else {
+                            console.log("Attribute value not found in source code:", attributeValue);
+                        }
+					} else {
+						console.log("No 'tx' attribute found for component:", componentName);
+						return false
+					}
+				}
+			);
+		}
+````

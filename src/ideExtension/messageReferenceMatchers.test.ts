@@ -1,11 +1,14 @@
-import { it, expect } from "vitest"
-import { parse } from "./messageReferenceMatchers.js"
-import type { PluginSettings } from "../settings.js"
+import { it, expect } from "vitest";
+import { parse } from "./messageReferenceMatchers.js";
+import type { PluginSettings } from "../settings.js";
 
 let settings: PluginSettings = {
-	preferredTfuncName: 't',
-	recognizedJSXAttributes: ['tx', 'subTx']
-}
+	preferredTfuncName: "t",
+	recognizedJSXAttributes: ["tx", "subTx"],
+};
+
+// DO NOT REFORMAT THIS FILE
+// IT WILL BREAK THE TESTS
 
 // jsx stuff
 it("should detect a tx attribute in a JSX element", async () => {
@@ -24,12 +27,67 @@ it("should detect a tx attribute in a JSX element", async () => {
 				</Text>
 			)
 		};
-		`
-	const matches = parse(sourceCode, settings)
-	console.log(matches)
-	expect(matches).toHaveLength(1)
-	expect(matches[0]?.messageId).toBe("notFound.title")
-})
+		`;
+	const matches = parse(sourceCode, settings);
+	console.log(matches);
+	expect(matches).toHaveLength(1);
+	expect(matches[0]?.messageId).toBe("notFound.title");
+});
+
+it("should detect a subTx attribute in a JSX element", async () => {
+	const sourceCode = `
+		const HeaderWithDesc = () => {
+			return (
+				<Header 
+					className="flex h-screen items-center justify-center"
+					subTx="wallet.description"
+				>
+					<Text text="ayuka" />
+				</Header>
+			)
+		};
+		`;
+	const matches = parse(sourceCode, settings);
+	console.log(matches);
+	expect(matches).toHaveLength(1);
+	expect(matches[0]?.messageId).toBe("wallet.description");
+});
+
+it("should detect multiple attributes in nested JSX elements", async () => {
+	const sourceCode = `
+		const ListItemLocalBackup = () => {
+			return (
+				<ListItem
+					tx="backupScreen.localBackup"
+					subTx="backupScreen.localBackupDescription"
+					leftIcon='faDownload'
+					leftIconColor={
+						isLocalBackupOn
+							? colors.palette.success200
+							: colors.palette.neutral400
+					}
+					leftIconInverse={true}
+					RightComponent={
+						<View style={$rightContainer}>
+							<Text
+								size="sm"
+								tx="payCommon.amountToPayLabel"
+								style={{color: 'white', textAlign: 'center'}}
+							/>
+						</View>
+					}
+					style={$item}
+				/>
+			)
+		};
+		`;
+	const matches = parse(sourceCode, settings);
+	console.log("matches 3", matches);
+	expect(matches).toHaveLength(3);
+	expect(matches[0]?.messageId).toBe("backupScreen.localBackup");
+	expect(matches[1]?.messageId).toBe("backupScreen.localBackupDescription");
+	expect(matches[2]?.messageId).toBe("payCommon.amountToPayLabel");
+});
 
 // t-function stuff
 
@@ -122,6 +180,17 @@ it("should detect combined message.attribute ids", async () => {
 	expect(matches[0]?.messageId).toBe("some-message.with-attribute")
 })
 
+it(`should detect human readable id t("penguin_purple_shoe_window")`, async () => {
+	const sourceCode = `
+	const x = t("penguin_purple_shoe_window")
+	`
+
+	const matches = parse(sourceCode, settings)
+	expect(matches[0]?.messageId).toBe("penguin_purple_shoe_window")
+	expect(matches[0]?.position.start.character).toBe(14)
+	expect(matches[0]?.position.end.character).toBe(42)
+})
+
 it("should work on a production JSX example", async () => {
 	const sourceCode = `
 		import NextPage from "next";
@@ -153,4 +222,3 @@ it("should work on a production JSX example", async () => {
 	expect(matches[1]?.messageId).toBe("404.title")
 	expect(matches[2]?.messageId).toBe("421.message")
 })
-

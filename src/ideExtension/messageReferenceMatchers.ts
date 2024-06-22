@@ -19,33 +19,34 @@ export function createMessageReferenceParser(translateFunctionNames: string[], j
 		entry: (r) => {
 			return Parsimmon.alt(Parsimmon.alt(r.FunctionCall!, r.JSXAttribute!), Parsimmon.any)
 				.many()
-				.map((matches) => {
-					// filter arbitrary characters
-					return matches.filter((match) => typeof match === "object")
-				})
+				.map((matches) => matches.flat().filter((match) => typeof match === "object")); // filter arbitrary characters
 		},
-	
+
 		// A string literal is either a single or double quoted string
 		stringLiteral: (r) => {
-			return Parsimmon.alt(r.doubleQuotedString!, r.singleQuotedString!)
+			return Parsimmon.alt(r.doubleQuotedString!, r.singleQuotedString!);
 		},
-	
+
 		// Double quoted string literal parser
 		//
 		// 1. Start with a double quote.
 		// 2. Then match any character that is not a double quote.
 		// 3. End with a double quote.
 		doubleQuotedString: () => {
-			return Parsimmon.string('"').then(Parsimmon.regex(/[^"]*/)).skip(Parsimmon.string('"'))
+			return Parsimmon.string('"')
+				.then(Parsimmon.regex(/[^"]*/))
+				.skip(Parsimmon.string('"'));
 		},
-	
+
 		// Single quoted string literal parser
 		//
 		// 1. Start with a single quote.
 		// 2. Then match any character that is not a single quote.
 		// 3. End with a single quote.
 		singleQuotedString: () => {
-			return Parsimmon.string("'").then(Parsimmon.regex(/[^']*/)).skip(Parsimmon.string("'"))
+			return Parsimmon.string("'")
+				.then(Parsimmon.regex(/[^']*/))
+				.skip(Parsimmon.string("'"));
 		},
 
 		// Parser for t function calls
@@ -72,47 +73,64 @@ export function createMessageReferenceParser(translateFunctionNames: string[], j
 								character: end.column,
 							},
 						},
-					}
+					};
 				}
-			)
+			);
 		},
 
-		// Parser for JSX attribute
-		jsxComponentOpeningTag: (r) => {
-			return Parsimmon.string("<").then(Parsimmon.regex(/[A-Z]\w*/)).skip(Parsimmon.string(">"))
-		},
-		jsxComponentClosingTag: (r) => {
-			return Parsimmon.string("</").then(Parsimmon.regex(/[^>]*/)).skip(Parsimmon.string(">"))
+		attributeValueParser: (r) => {
+			return Parsimmon.seqMap(
+				r.stringLiteral.or( // recursively call jsx parser
+					Parsimmon.lazy(() => {
+						return Parsimmon.string("{")
+							.then(Parsimmon.alt(r.stringLiteral!, r.JSXAttribute!))
+							.skip(Parsimmon.string("}"));
+					})
+				),
+				(value) => typeof value === "string" ? value : false
+			);
 		},
 
 		JSXAttribute: function (r) {
 			return Parsimmon.seqMap(
-				Parsimmon.regex(/[^a-zA-Z0-9]/),
-				r.jsxComponentOpeningTag!,
-				Parsimmon.alt(...jsxAttributes.map(Parsimmon.string)),
-				Parsimmon.index, // start position of the message id
-				r.stringLiteral!, // message id
-				Parsimmon.index, // end position of the message id
-				r.jsxComponentClosingTag!,
-				(_, __, ___, start, messageId, end) => {
-					return {
-						messageId,
-						position: {
-							start: {
-								line: start.line,
-								character: start.column,
+				Parsimmon.string("<"),
+				Parsimmon.regex(/[A-Z][\w-]*/), // JSX component name (allowing hyphens)
+				Parsimmon.regex(/\s+/), // skip whitespace
+				Parsimmon.index,
+				Parsimmon.sepBy1(
+					Parsimmon.seq(
+						Parsimmon.regex(/\w+/).skip(Parsimmon.regex(/\s*=\s*/)), // attribute name followed by equal sign
+						r.attributeValueParser // attribute value
+					),
+					Parsimmon.regex(/\s+/) // skip whitespace between attributes
+				),
+				Parsimmon.index,
+				(_, componentName, __, start, attributesRaw, end) => {
+					// console.log("ComponentName:", componentName);
+					// console.log("Attributes:", attributesRaw);
+					const matches: any[] = [];
+					for (const [name, value] of attributesRaw) {
+						if (!jsxAttributes.includes(name)) continue;
+						// console.log("Message ID:", value);
+						matches.push({
+							messageId: value,
+							position: {
+								start: {
+									line: start.line,
+									character: start.column,
+								},
+								end: {
+									line: end.line,
+									character: end.column,
+								},
 							},
-							end: {
-								line: end.line,
-								character: end.column,
-							},
-						},
+						})
 					}
+					return matches.length > 0 ? matches : false;
 				}
 			)
-		}
-	})
-
+		},
+	});
 	return parser
 }
 
