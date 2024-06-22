@@ -11,6 +11,11 @@ usage: add this to the `modules` array in `project.inlang/settings.json`:
 ```
 "https://cdn.jsdelivr.net/gh/KraXen72/inlang-t-function-jsx-hybrid-matcher/dist/index.js"
 ```
+"stable" (pre-jsx) version:
+```
+https://cdn.jsdelivr.net/gh/KraXen72/inlang-t-function-jsx-hybrid-matcher@021003e/dist/index.js
+```
+
 
 dev: use the path to the built index.js:
 ```
