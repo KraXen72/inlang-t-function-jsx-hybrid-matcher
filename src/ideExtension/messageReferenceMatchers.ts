@@ -85,7 +85,6 @@ export function createMessageReferenceParser(translateFunctionNames: string[], j
 							.skip(Parsimmon.regex(/\s*=\s*/)), // equal sign
 						Parsimmon.index,
 						r.stringLiteral, // attribute value
-						Parsimmon.index // skip whitespace after attribute value
 					),
 					Parsimmon.regex(/\s+/) // skip whitespace between attributes
 				),
@@ -93,7 +92,7 @@ export function createMessageReferenceParser(translateFunctionNames: string[], j
 					// console.log("ComponentName:", componentName);
 					// console.log("Attributes:", attributesRaw);
 					const matches: any[] = [];
-					for (const [name, start, value, end] of attributesRaw) {
+					for (const [name, start, value] of attributesRaw) {
 						if (!jsxAttributes.includes(name)) continue;
 						// console.log("Message ID:", value);
 						matches.push({
