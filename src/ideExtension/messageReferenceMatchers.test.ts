@@ -4,6 +4,7 @@ import type { PluginSettings } from "../settings.js";
 
 let settings: PluginSettings = {
 	preferredTfuncName: "t",
+	recognizedTfuncNames: ["t", "translate"],
 	recognizedJSXAttributes: ["tx", "subTx"],
 };
 
@@ -221,4 +222,45 @@ it("should work on a production JSX example", async () => {
 	expect(matches[0]?.messageId).toBe("hello-world")
 	expect(matches[1]?.messageId).toBe("404.title")
 	expect(matches[2]?.messageId).toBe("421.message")
+})
+
+it("should detect multiple translate function calls", async () => {
+	const sourceCode = `
+		const toggleBackupSwitch = () => {
+      try {
+        setIsLoading(true)
+        const result = userSettingsStore.setIsLocalBackupOn(!isLocalBackupOn)
+        setIsLocalBackupOn(result)
+
+        if (result === true) { 
+                    
+          log.trace('[toggleBackupSwitch]', JSON.stringify(proofsStore.getBalances()))
+          
+          if(proofsStore.allProofs.length > 0){
+            log.trace('[toggleBackupSwitch]', JSON.stringify(proofsStore.allProofs))
+            Database.addOrUpdateProofs(proofsStore.allProofs)
+          }
+          if(proofsStore.allPendingProofs.length > 0){
+            Database.addOrUpdateProofs(proofsStore.allPendingProofs, true)
+          }
+
+          setBackupResultMessage(translate("backupScreen.success"))
+          toggleBackupModal()
+          setIsLoading(false)
+          return
+        }
+
+        Database.removeAllProofs()
+        setIsLoading(false)
+        setBackupResultMessage(translate("backupScreen.deletedSuccess"))
+        toggleBackupModal()
+      } catch (e: any) {
+        handleError(e)
+      }
+    }
+	`
+	const matches = parse(sourceCode, settings)
+	expect(matches).toHaveLength(2)
+	expect(matches[0]?.messageId).toBe("backupScreen.success")
+	expect(matches[1]?.messageId).toBe("backupScreen.deletedSuccess")
 })

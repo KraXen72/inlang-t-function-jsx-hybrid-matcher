@@ -78,19 +78,6 @@ export function createMessageReferenceParser(translateFunctionNames: string[], j
 			);
 		},
 
-		attributeValueParser: (r) => {
-			return Parsimmon.seqMap(
-				r.stringLiteral.or( // recursively call jsx parser
-					Parsimmon.lazy(() => {
-						return Parsimmon.string("{")
-							.then(Parsimmon.alt(r.stringLiteral!, r.JSXAttribute!))
-							.skip(Parsimmon.string("}"));
-					})
-				),
-				(value) => typeof value === "string" ? value : false
-			);
-		},
-
 		JSXAttribute: function (r) {
 			return Parsimmon.seqMap(
 				Parsimmon.string("<"),
@@ -100,7 +87,7 @@ export function createMessageReferenceParser(translateFunctionNames: string[], j
 				Parsimmon.sepBy1(
 					Parsimmon.seq(
 						Parsimmon.regex(/\w+/).skip(Parsimmon.regex(/\s*=\s*/)), // attribute name followed by equal sign
-						r.attributeValueParser // attribute value
+						r.stringLiteral // attribute value
 					),
 					Parsimmon.regex(/\s+/) // skip whitespace between attributes
 				),
