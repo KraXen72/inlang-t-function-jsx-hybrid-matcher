@@ -3,9 +3,10 @@
 this plugin is a modification of the official `t-function matcher` plugin, with the following changes:
 - [x] support several custom translate function names (instead of just `t`)
 - [x] add gui configuration in sherlock
-- [ ] support custom JSX attributes on react components (later)
+- [x] support custom JSX attributes on react components
 
 readme WIP ok
+only kinda works tbh
 
 usage: add this to the `modules` array in `project.inlang/settings.json`:
 ```

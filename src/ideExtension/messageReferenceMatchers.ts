@@ -60,7 +60,6 @@ export function createMessageReferenceParser(translateFunctionNames: string[], j
 				Parsimmon.regex(/[^)]*/), // ignore the rest of the function call
 				Parsimmon.string(")"), // end with a closing parenthesis
 				(_, __,start, messageId, end) => {
-					console.log("tfunc", __)
 					return {
 						messageId,
 						position: {
@@ -83,20 +82,20 @@ export function createMessageReferenceParser(translateFunctionNames: string[], j
 				Parsimmon.string("<"),
 				Parsimmon.regex(/[A-Z][\w-]*/), // JSX component name (allowing hyphens)
 				Parsimmon.regex(/\s+/), // skip whitespace
-				Parsimmon.index,
 				Parsimmon.sepBy1(
 					Parsimmon.seq(
 						Parsimmon.regex(/\w+/).skip(Parsimmon.regex(/\s*=\s*/)), // attribute name followed by equal sign
-						r.stringLiteral // attribute value
+						Parsimmon.index,
+						r.stringLiteral, // attribute value
+						Parsimmon.index
 					),
 					Parsimmon.regex(/\s+/) // skip whitespace between attributes
 				),
-				Parsimmon.index,
-				(_, componentName, __, start, attributesRaw, end) => {
+				(_, componentName, __, attributesRaw) => {
 					// console.log("ComponentName:", componentName);
 					// console.log("Attributes:", attributesRaw);
 					const matches: any[] = [];
-					for (const [name, value] of attributesRaw) {
+					for (const [name, start, value, end] of attributesRaw) {
 						if (!jsxAttributes.includes(name)) continue;
 						// console.log("Message ID:", value);
 						matches.push({

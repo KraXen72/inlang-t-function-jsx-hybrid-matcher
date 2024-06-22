@@ -1,6 +1,6 @@
 import { it, expect } from "vitest";
-import { parse } from "./messageReferenceMatchers.js";
-import type { PluginSettings } from "../settings.js";
+import { parse } from "../src/ideExtension/messageReferenceMatchers.js";
+import type { PluginSettings } from "../src/settings.js";
 
 let settings: PluginSettings = {
 	preferredTfuncName: "t",
@@ -30,7 +30,6 @@ it("should detect a tx attribute in a JSX element", async () => {
 		};
 		`;
 	const matches = parse(sourceCode, settings);
-	console.log(matches);
 	expect(matches).toHaveLength(1);
 	expect(matches[0]?.messageId).toBe("notFound.title");
 });
@@ -49,7 +48,6 @@ it("should detect a subTx attribute in a JSX element", async () => {
 		};
 		`;
 	const matches = parse(sourceCode, settings);
-	console.log(matches);
 	expect(matches).toHaveLength(1);
 	expect(matches[0]?.messageId).toBe("wallet.description");
 });
@@ -83,7 +81,6 @@ it("should detect multiple attributes in nested JSX elements", async () => {
 		};
 		`;
 	const matches = parse(sourceCode, settings);
-	console.log("matches 3", matches);
 	expect(matches).toHaveLength(3);
 	expect(matches[0]?.messageId).toBe("backupScreen.localBackup");
 	expect(matches[1]?.messageId).toBe("backupScreen.localBackupDescription");
@@ -114,6 +111,7 @@ it('should detect double quotes t("id")', async () => {
     const x = t("some-id")
     `
 	const matches = parse(sourceCode, settings)
+	console.log("dbl", matches[0])
 	expect(matches[0]?.messageId).toBe("some-id")
 	expect(matches[0]?.position.start.character).toBe(17)
 	expect(matches[0]?.position.end.character).toBe(26)
