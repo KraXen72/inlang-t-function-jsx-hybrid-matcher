@@ -8,9 +8,6 @@ this plugin is an extended version of the official `t-function matcher` plugin, 
   
 ![main screenshot](screenshots/screenie1.png)  
   
-Feel free to open issues about bugs. Feature requests likely won't be implemeted.  
-I wrote this for https://github.com/minibits-cash/minibits_wallet  
-
 ## usage
 add this to the `modules` array in `project.inlang/settings.json`:
 ```
@@ -32,3 +29,6 @@ or:
 ```
 "D:/coding/node-deno/inlang-t-function-jsx-hybrid-matcher/dist/index.js"
 ```
+  
+Feel free to open issues about bugs. Feature requests likely won't be implemeted.  
+I wrote this for https://github.com/minibits-cash/minibits_wallet  
