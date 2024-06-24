@@ -87,6 +87,22 @@ it("should detect multiple attributes in nested JSX elements", async () => {
 	expect(matches[2]?.messageId).toBe("payCommon.amountToPayLabel");
 });
 
+it("should detect bracket-wrapped string attributes in JSX", async () => {
+	const sourceCode = `
+		<View style={$bottomContainer}>
+			<View style={$buttonContainer}>
+				<Button
+					tx={"transferScreen.requestInvoice"}
+					onPress={onRequestLnurlInvoice}
+				/>
+			</View>
+		</View>
+		`;
+	const matches = parse(sourceCode, settings);
+	expect(matches).toHaveLength(1);
+	expect(matches[0]?.messageId).toBe("transferScreen.requestInvoice");
+});
+
 // t-function stuff
 
 it("should not match a function that ends with t but is not a t function", async () => {

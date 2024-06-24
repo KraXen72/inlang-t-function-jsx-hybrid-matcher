@@ -82,11 +82,11 @@ export function createMessageReferenceParser(translateFunctionNames: string[], j
 				Parsimmon.sepBy1(
 					Parsimmon.seq(
 						Parsimmon.regex(/\w+/) // attribute name
-							.skip(Parsimmon.regex(/\s*=\s*/)), // equal sign
+							.skip(Parsimmon.regex(/\s*=\s*{?/)), // equal sign and optional {
 						Parsimmon.index,
 						r.stringLiteral, // attribute value
 					),
-					Parsimmon.regex(/\s+/) // skip whitespace between attributes
+					Parsimmon.regex(/}?\s+/) // skip whitespace between attributes
 				),
 				(_, componentName, __, attributesRaw) => {
 					// console.log("ComponentName:", componentName);
