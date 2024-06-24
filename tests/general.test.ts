@@ -89,15 +89,32 @@ it("should detect multiple attributes in nested JSX elements", async () => {
 
 it("should detect bracket-wrapped string attributes in JSX", async () => {
 	const sourceCode = `
-		<View style={$bottomContainer}>
-			<View style={$buttonContainer}>
-				<Button
-					tx={"transferScreen.requestInvoice"}
-					onPress={onRequestLnurlInvoice}
-				/>
-			</View>
-		</View>
-		`;
+		{
+			!encodedInvoice &&
+				transactionStatus !== TransactionStatus.COMPLETED &&
+				lnurlPayCommentAllowed > 0 && (
+					<>
+						<MemoInputCard
+							memo={lnurlPayComment}
+							setMemo={setLnurlPayComment}
+							ref={lnurlCommentInputRef}
+							onMemoDone={() => false}
+							onMemoEndEditing={() => false}
+							disabled={encodedInvoice ? true : false}
+							maxLength={lnurlPayCommentAllowed}
+						/>
+						<View style={$bottomContainer}>
+							<View style={$buttonContainer}>
+								<Button
+									tx={"transferScreen.requestInvoice"}
+									onPress={onRequestLnurlInvoice}
+								/>
+							</View>
+						</View>
+					</>
+				);
+		}`;
+
 	const matches = parse(sourceCode, settings);
 	expect(matches).toHaveLength(1);
 	expect(matches[0]?.messageId).toBe("transferScreen.requestInvoice");
@@ -127,7 +144,6 @@ it('should detect double quotes t("id")', async () => {
     const x = t("some-id")
     `
 	const matches = parse(sourceCode, settings)
-	console.log("dbl", matches[0])
 	expect(matches[0]?.messageId).toBe("some-id")
 	expect(matches[0]?.position.start.character).toBe(17)
 	expect(matches[0]?.position.end.character).toBe(26)
