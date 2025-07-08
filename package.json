@@ -1,7 +1,7 @@
 {
 	"name": "inlang-t-function-jsx-hybrid-matcher",
 	"private": true,
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"type": "module",
 	"files": [
 		"./dist"
@@ -12,16 +12,16 @@
 		"test": "tsc --noEmit && vitest run"
 	},
 	"devDependencies": {
-		"@inlang/cli": "^2.18.1",
-		"@inlang/sdk": "^0.35.7",
-		"@lix-js/client": "^2.2.0",
+		"@inlang/cli": "^3.0.12",
+		"@inlang/sdk": "^2.4.9",
+		"@lix-js/client": "^2.2.1",
 		"@types/parsimmon": "^1.10.9",
-		"typescript": "^5.4.5",
-		"vitest": "^1.6.0"
+		"typescript": "^5.8.3",
+		"vitest": "^3.2.4"
 	},
 	"dependencies": {
-		"@inlang/plugin": "^2.4.13",
-		"@sinclair/typebox": "^0.31.17",
+		"@inlang/plugin": "^2.4.14",
+		"@sinclair/typebox": "^0.34.37",
 		"parsimmon": "^1.18.1"
 	},
 	"pnpm": {

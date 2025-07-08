@@ -1,7 +1,9 @@
 import { Plugin } from "@inlang/plugin"
-import { displayName, description } from "../marketplace-manifest.json"
 import { PluginSettings } from "./settings.js"
 import { ideExtensionConfig } from "./ideExtension/config.js"
+
+import manifest from "../marketplace-manifest.json" with { type: "json" }
+const { displayName, description } = manifest;
 
 const id = "plugin.minibits.inlangmatcher"
 

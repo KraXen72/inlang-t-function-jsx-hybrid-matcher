@@ -2,7 +2,7 @@
 	"include": ["src/**/*", "tests/messageReferenceMatchers.test.ts"],
 	"compilerOptions": {
 		// strict ES module
-		"module": "Node16",
+		"module": "node18",
 		// strict ES module
 		"moduleResolution": "node16",
 		// enables importing from marketplace-manifest.json
