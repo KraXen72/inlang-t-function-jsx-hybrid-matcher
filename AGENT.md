@@ -23,3 +23,10 @@
 - **Config**: Settings use optional fields with defaults (preferredTfuncName, recognizedTfuncNames, recognizedJSXAttributes)
 - **Error Handling**: AST parsing allows invalid/incomplete code for IDE support
 - **Formatting**: No specific formatter configured, follow existing patterns
+
+## ALWAYS REMEMBER
+- do not overcomplicate stuff. always try to think of a simple & elegant solution which REQUIRES MINIMAL CHANGES
+- if you notice that there is a better solution than one i am currently using/asking about, but would require a lot of refactoring, do what i at the time but propose this new solution, what it entails, why it is better and some potential drawbacks
+- always try to change as little as possible to do what i want from you
+- do not add superfulous comments, only comment code that's not immediatelly obvious what it does
+- always try to add JSDoc to describe what a function does and how it's used

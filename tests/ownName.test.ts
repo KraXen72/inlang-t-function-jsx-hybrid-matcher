@@ -49,14 +49,18 @@ it("should highlight custom tx attrs from settings", () => {
 	console.log(inspect(matches, { depth: null }));
 
 	expect(matches).toHaveLength(2);
-	expect(matches).toContain({
+	expect(matches[0]).toEqual({
 		messageId: 'contactsScreen.ownName.chooseOwnName',
-		start: { line: 3, character: 21 },
-		end: { line: 3, charcter: 57 }
+		position: {
+			start: { line: 3, character: 20 },
+			end: { line: 3, character: 56 }
+		}
 	})
-	expect(matches).toContain({
+	expect(matches[1]).toEqual({
 		messageId: 'contactsScreen.ownName.chooseOwnNameFooter',
-		start: { line: 29, character: 12 },
-		end: { line: 29, charcter: 54 }
+		position: {
+			start: { line: 29, character: 11 },
+			end: { line: 29, character: 53 }
+		}
 	})
 })

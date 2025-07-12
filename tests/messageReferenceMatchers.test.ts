@@ -1,10 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { parse } from "./messageReferenceMatchers.js";
+import { parse } from "../src/ideExtension/messageReferenceMatchers";
+import type { IPluginSettings } from "../src/settings";
 
 // Test configuration
-const testConfig = {
-	functionNames: ['t', 'translate'],
-	jsxAttributes: ['tx', 'i18nKey']
+const testConfig: IPluginSettings = {
+	recognizedTfuncNames: ['t', 'translate'],
+	recognizedJSXAttributes: ['tx', 'i18nKey']
 };
 
 describe("messageReferenceMatchers", () => {

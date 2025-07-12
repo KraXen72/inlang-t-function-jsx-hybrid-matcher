@@ -1,8 +1,8 @@
 import { it, expect } from "vitest";
 import { parse } from "../src/ideExtension/messageReferenceMatchers.js";
-import type { PluginSettings } from "../src/settings.js";
+import type { IPluginSettings } from "../src/settings.js";
 
-let settings: PluginSettings = {
+let settings: IPluginSettings = {
 	preferredTfuncName: "t",
 	recognizedTfuncNames: ["t", "translate"],
 	recognizedJSXAttributes: ["tx", "subTx"],
@@ -146,7 +146,7 @@ it('should detect double quotes t("id")', async () => {
 	const matches = parse(sourceCode, settings)
 	expect(matches[0]?.messageId).toBe("some-id")
 	expect(matches[0]?.position.start.character).toBe(17)
-	expect(matches[0]?.position.end.character).toBe(26)
+	expect(matches[0]?.position.end.character).toBe(24)
 	expect(
 		sourceCode.slice(matches[0]?.position.start.character, matches[0]?.position.end.character)
 	).toBe('"some-id"')
@@ -160,7 +160,7 @@ it(`should detect single quotes t('id')`, async () => {
 	const matches = parse(sourceCode, settings)
 	expect(matches[0]?.messageId).toBe("some-id")
 	expect(matches[0]?.position.start.character).toBe(17)
-	expect(matches[0]?.position.end.character).toBe(26)
+	expect(matches[0]?.position.end.character).toBe(24)
 })
 
 it(`should detect JSX <p>{t('id')}</p>`, async () => {
@@ -171,7 +171,7 @@ it(`should detect JSX <p>{t('id')}</p>`, async () => {
 	const matches = parse(sourceCode, settings)
 	expect(matches[0]?.messageId).toBe("some-id")
 	expect(matches[0]?.position.start.character).toBe(11)
-	expect(matches[0]?.position.end.character).toBe(20)
+	expect(matches[0]?.position.end.character).toBe(18)
 })
 
 it("should detect t('id', ...args)", async () => {
@@ -219,7 +219,7 @@ it(`should detect human readable id t("penguin_purple_shoe_window")`, async () =
 	const matches = parse(sourceCode, settings)
 	expect(matches[0]?.messageId).toBe("penguin_purple_shoe_window")
 	expect(matches[0]?.position.start.character).toBe(14)
-	expect(matches[0]?.position.end.character).toBe(42)
+	expect(matches[0]?.position.end.character).toBe(40)
 })
 
 it("should work on a production JSX example", async () => {

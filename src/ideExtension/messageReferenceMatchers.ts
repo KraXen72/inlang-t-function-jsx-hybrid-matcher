@@ -109,19 +109,19 @@ function handleFunctionCall(
 		const [start, end] = firstArg.range;
 
 		// Adjust positions to exclude quotes
-		const startPos = findQuoteStart(sourceCode, start);
-		const endPos = findQuoteEnd(sourceCode, end);
+		const startCharInLine = findQuoteStartInLine(sourceCode, start, firstArg.loc.start);
+		const endCharInLine = findQuoteEndInLine(sourceCode, end, firstArg.loc.end);
 
 		matches.push({
 			messageId,
 			position: {
 				start: {
 					line: firstArg.loc.start.line - 1, // Convert to 0-based
-					character: startPos
+					character: startCharInLine
 				},
 				end: {
 					line: firstArg.loc.end.line - 1, // Convert to 0-based
-					character: endPos
+					character: endCharInLine
 				}
 			}
 		});
@@ -178,19 +178,19 @@ function handleJSXAttribute(
 
 	// Extract position information
 	const [start, end] = valueRange;
-	const startPos = findQuoteStart(sourceCode, start);
-	const endPos = findQuoteEnd(sourceCode, end);
+	const startCharInLine = findQuoteStartInLine(sourceCode, start, valueLoc.start);
+	const endCharInLine = findQuoteEndInLine(sourceCode, end, valueLoc.end);
 
 	matches.push({
 		messageId,
 		position: {
 			start: {
 				line: valueLoc.start.line - 1, // Convert to 0-based
-				character: startPos
+				character: startCharInLine
 			},
 			end: {
 				line: valueLoc.end.line - 1, // Convert to 0-based
-				character: endPos
+				character: endCharInLine
 			}
 		}
 	});
@@ -206,22 +206,22 @@ function getFunctionName(callee: TSESTree.Expression): string | null {
 	return null;
 }
 
-function findQuoteStart(sourceCode: string, position: number): number {
-	// Find the opening quote and return position after it
-	const char = sourceCode[position];
+function findQuoteStartInLine(sourceCode: string, absolutePosition: number, loc: { line: number; column: number }): number {
+	// Find the opening quote and return character position within the line (after the quote)
+	const char = sourceCode[absolutePosition];
 	if (char === '"' || char === "'") {
-		return position + 1;
+		return loc.column + 1;
 	}
-	return position;
+	return loc.column;
 }
 
-function findQuoteEnd(sourceCode: string, position: number): number {
-	// Find the closing quote and return position before it
-	const char = sourceCode[position - 1];
+function findQuoteEndInLine(sourceCode: string, absolutePosition: number, loc: { line: number; column: number }): number {
+	// Find the closing quote and return character position within the line (before the quote)
+	const char = sourceCode[absolutePosition - 1];
 	if (char === '"' || char === "'") {
-		return position - 1;
+		return loc.column - 1;
 	}
-	return position;
+	return loc.column;
 }
 
 /**
