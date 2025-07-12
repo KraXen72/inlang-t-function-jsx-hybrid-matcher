@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, assert } from "vitest";
 import { parse } from "../src/ideExtension/messageReferenceMatchers";
 import type { IPluginSettings } from "../src/settings";
 
@@ -30,13 +30,14 @@ describe("messageReferenceMatchers", () => {
     const x = t("some-id")
     `;
     const matches = parse(sourceCode, testConfig);
+    expect(matches).toHaveLength(1);
     expect(matches[0]?.messageId).toBe("some-id");
     expect(matches[0]?.position.start.character).toBe(18);
-    expect(matches[0]?.position.end.character).toBe(25);
+    expect(matches[0]?.position.end.character).toBe(26);
     expect(
       sourceCode.slice(
         matches[0]?.position.start.character,
-        matches[0]?.position.end.character
+        matches[0]?.position.end.character - 1
       )
     ).toBe('some-id');
   });
@@ -46,9 +47,10 @@ describe("messageReferenceMatchers", () => {
     const x = t('some-id')
   `;
     const matches = parse(sourceCode, testConfig);
+    expect(matches).toHaveLength(1);
     expect(matches[0]?.messageId).toBe("some-id");
     expect(matches[0]?.position.start.character).toBe(18);
-    expect(matches[0]?.position.end.character).toBe(25);
+    expect(matches[0]?.position.end.character).toBe(26);
   });
 
   it(`should detect JSX <p>{t('id')}</p>`, () => {
@@ -56,9 +58,10 @@ describe("messageReferenceMatchers", () => {
     <p>{t('some-id')}</p>
     `;
     const matches = parse(sourceCode, testConfig);
+    expect(matches).toHaveLength(1);
     expect(matches[0]?.messageId).toBe("some-id");
     expect(matches[0]?.position.start.character).toBe(12);
-    expect(matches[0]?.position.end.character).toBe(19);
+    expect(matches[0]?.position.end.character).toBe(20);
   });
 
   it("should detect t('id', ...args)", () => {
@@ -66,11 +69,12 @@ describe("messageReferenceMatchers", () => {
     <p>{t('some-id' , { name: "inlang" }, variable, arg3)}</p>
     `;
     const matches = parse(sourceCode, testConfig);
+    expect(matches).toHaveLength(1);
     expect(matches[0]?.messageId).toBe("some-id");
     expect(
       sourceCode.slice(
         matches[0]?.position.start.character,
-        matches[0]?.position.end.character
+        matches[0]?.position.end.character - 1
       )
     ).toBe("some-id");
   });
@@ -84,13 +88,18 @@ describe("messageReferenceMatchers", () => {
   });
 
   it("should handle whitespace correctly", () => {
-    const sourceCode = `const x = t("some-id", undefined)`;
+    const sourceCode = `
+      const x = t("some-id", undefined)
+    `;
     const matches = parse(sourceCode, testConfig);
+    expect(matches).toHaveLength(1);
     expect(matches[0]?.messageId).toBe("some-id");
+    expect(matches[0]?.position.start.character).toBe(20)
+    expect(matches[0]?.position.end.character).toBe(28)
     expect(
       sourceCode.slice(
         matches[0]?.position.start.character,
-        matches[0]?.position.end.character
+        matches[0]?.position.end.character - 1
       )
     ).toBe('some-id');
   });
@@ -109,7 +118,7 @@ describe("messageReferenceMatchers", () => {
     const matches = parse(sourceCode, testConfig);
     expect(matches[0]?.messageId).toBe("penguin_purple_shoe_window");
     expect(matches[0]?.position.start.character).toBe(16);
-    expect(matches[0]?.position.end.character).toBe(42);
+    expect(matches[0]?.position.end.character).toBe(43);
   });
 
   it("should work on a production JSX example", () => {

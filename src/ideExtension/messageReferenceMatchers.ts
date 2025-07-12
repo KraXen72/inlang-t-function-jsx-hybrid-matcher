@@ -2,6 +2,10 @@ import { parse as parseTypeScript } from '@typescript-eslint/typescript-estree';
 import type { TSESTree } from '@typescript-eslint/typescript-estree';
 import type { IPluginSettings } from '../settings';
 
+/**
+ * it's suppsosed to return 1 extra character worth of col. offset at the end,
+ * to place the message there nicely (after the string has ended)
+ */
 interface MessageReferenceMatch {
 	messageId: string;
 	position: {
@@ -46,8 +50,7 @@ export function parse(sourceCode: string, config: IPluginSettings = DEFAULT_CONF
 			}
 		// oxlint-disable-next-line no-unused-vars
 		} catch (error) {
-			// Continue to next strategy
-			continue;
+			continue; // next strategy
 		}
 	}
 
@@ -181,6 +184,30 @@ function traverseNode(
 	}
 }
 
+function createPositionObject(messageId: string, loc: TSESTree.SourceLocation): MessageReferenceMatch {
+	// in ts-estree, column offsets are 0-based
+	// inlang's Sherlock expects 1-based column offsets (atleast from what i can tell their t-func matcher is sending from parsimmon)
+	// ts-estree gives offsets for the raw string, e.g. for:
+  // "some-id"
+	// the column offsets are: { start: 0, end: 9 }
+	// we need 1-based, so we'd add +1 to both: { start: 1, end: 10 }
+	// to skip the initial ",' or ` we add +1 to the start: { start: 2, end: 10 }
+
+	return {
+		messageId,
+		position: {
+			start: {
+				line: loc.start.line,
+				character: loc.start.column + 2
+			},
+			end: {
+				line: loc.end.line,
+				character: loc.end.column + 1
+			}
+		}
+	} satisfies MessageReferenceMatch
+}
+
 function handleFunctionCall(
 	node: TSESTree.CallExpression,
 	sourceCode: string,
@@ -203,24 +230,7 @@ function handleFunctionCall(
 	// Extract position information
 	if (firstArg.range && firstArg.loc) {
 		const messageId = firstArg.value;
-		// Convert to line-relative, one-based positions excluding quotes
-		const startCharInLine = firstArg.loc.start.column + 1;
-		const endCharInLine = firstArg.loc.end.column + 1;
-
-		// all line offsets should be one-based according to Parismmon and inlang's t-func-matcher
-		matches.push({
-			messageId,
-			position: {
-				start: {
-					line: firstArg.loc.start.line,
-					character: startCharInLine
-				},
-				end: {
-					line: firstArg.loc.end.line,
-					character: endCharInLine
-				}
-			}
-		});
+		matches.push(createPositionObject(messageId, firstArg.loc));
 	}
 }
 
@@ -267,23 +277,7 @@ function handleJSXAttribute(
 		return;
 	}
 
-	// Convert to line-relative, one-based positions excluding quotes
-	const startCharInLine = valueLoc.start.column + 1 + 1; // +1 for quote, +1 for one-based
-	const endCharInLine = valueLoc.end.column + 1; // +1 for one-based, end column is already after the content
-
-	matches.push({
-		messageId,
-		position: {
-			start: {
-				line: valueLoc.start.line,
-				character: startCharInLine
-			},
-			end: {
-				line: valueLoc.end.line,
-				character: endCharInLine
-			}
-		}
-	});
+	matches.push(createPositionObject(messageId, valueLoc));
 }
 
 function getFunctionName(callee: TSESTree.Expression): string | null {

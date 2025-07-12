@@ -49,14 +49,14 @@ it("should highlight custom tx attrs from settings", () => {
     messageId: 'contactsScreen.ownName.chooseOwnName',
     position: {
       start: { line: 3, character: 30 },
-      end: { line: 3, character: 66 }
+      end: { line: 3, character: 67 }
     }
   })
   expect(matches[1]).toEqual({
     messageId: 'contactsScreen.ownName.chooseOwnNameFooter',
     position: {
       start: { line: 29, character: 13 },
-      end: { line: 29, character: 55 }
+      end: { line: 29, character: 56 }
     }
   })
 })

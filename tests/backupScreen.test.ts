@@ -1,340 +1,209 @@
 import { it, expect } from "vitest";
 import { parse } from "../src/ideExtension/messageReferenceMatchers.js";
 import type { IPluginSettings } from "../src/settings.js";
-import { inspect } from "node:util";
 let settings: IPluginSettings = {
 	preferredTfuncName: "translate",
 	recognizedTfuncNames: ["translate"],
 	recognizedJSXAttributes: ["tx", "subTx"],
 };
-const sourceCode = `import {observer} from 'mobx-react-lite'
-import React, {FC, useEffect, useState} from 'react'
-import {Switch, TextStyle, View, ViewStyle} from 'react-native'
-import {colors, spacing, useThemeColor} from '../theme'
-import {SettingsStackScreenProps} from '../navigation'
-import {
-  ListItem,
-  Screen,
-  Text,
-  Card,
-  Loading,
-  ErrorModal,
-  InfoModal,
-  BottomModal,
-  Button,
-} from '../components'
-import {useHeader} from '../utils/useHeader'
-import {useStores} from '../models'
-import AppError from '../utils/AppError'
-import EventEmitter from '../utils/eventEmitter'
-import {ResultModalInfo} from './Wallet/ResultModalInfo'
-import {Database, log, WalletTask, WalletTaskResult} from '../services'
-import { getSnapshot } from 'mobx-state-tree'
-import { translate } from '../i18n'
+const sourceCode = `import { translate } from '../i18n'
 
-export const BackupScreen: FC<SettingsStackScreenProps<'Backup'>> = observer(function BackupScreen(_props) {
-    const {navigation} = _props
-    useHeader({
-        leftIcon: 'faArrowLeft',
-        onLeftPress: () => navigation.goBack(),
-    })
-
-    const {userSettingsStore, proofsStore, mintsStore} = useStores()
-
-    const [isLoading, setIsLoading] = useState(false)
-    const [isLocalBackupOn, setIsLocalBackupOn] = useState<boolean>(
-      userSettingsStore.isLocalBackupOn,
-    )
-    const [error, setError] = useState<AppError | undefined>()
-    const [info, setInfo] = useState('')
-    const [isBackupModalVisible, setIsBackupModalVisible] =
-      useState<boolean>(false)
-    const [isHandleSpentFromSpendableSentToQueue, setIsHandleSpentFromSpendableSentToQueue] = useState<boolean>(false)
-    const [backupResultMessage, setBackupResultMessage] = useState<string>()
-    const [totalSpentCount, setTotalSpentCount] = useState<number>(0)
-    const [totalSpentAmount, setTotalSpentAmount] = useState<number>(0)
-
-
-    useEffect(() => {
-        const handleSpentByMintTaskResult = async (result: WalletTaskResult) => {
-            log.warn('handleSpentByMintTaskResult event handler triggered')
-
-            if (!isHandleSpentFromSpendableSentToQueue) { return false }
-            
-            setIsLoading(false)            
-            // runs per each mint
-            if (result && result.spentAmount > 0) {
-                setTotalSpentAmount(prev => prev + result.spentAmount)
-                setTotalSpentCount(prev => prev + result.spentCount)
-                setInfo(
-                  translate("backupScreen.result", { proofCount: totalSpentCount, amount: totalSpentAmount })
-                )
-                return
-            }
-          setInfo(translate("noSpentEcashFound"))            
+export const BackupScreen = () => {
+    const handleSpentByMintTaskResult = async (result) => {
+        if (result && result.spentAmount > 0) {
+            setInfo(
+              translate("backupScreen.result", { proofCount: totalSpentCount, amount: totalSpentAmount })
+            )
+            return
         }
-        
-        EventEmitter.on('ev__handleSpentByMintTask_result', handleSpentByMintTaskResult)
-        
-        return () => {
-            EventEmitter.off('ev__handleSpentByMintTask_result', handleSpentByMintTaskResult)            
-        }
-    }, [isHandleSpentFromSpendableSentToQueue])
+        setInfo(translate("noSpentEcashFound"))            
+    }
 
     const toggleBackupSwitch = () => {
-      try {
-        setIsLoading(true)
-        const result = userSettingsStore.setIsLocalBackupOn(!isLocalBackupOn)
-        setIsLocalBackupOn(result)
-
         if (result === true) { 
-                    
-          log.trace('[toggleBackupSwitch]', JSON.stringify(proofsStore.getBalances()))
-          
-          if(proofsStore.allProofs.length > 0){
-            log.trace('[toggleBackupSwitch]', JSON.stringify(proofsStore.allProofs))
-            Database.addOrUpdateProofs(proofsStore.allProofs)
-          }
-          if(proofsStore.allPendingProofs.length > 0){
-            Database.addOrUpdateProofs(proofsStore.allPendingProofs, true)
-          }
-
-          setBackupResultMessage(translate("backupScreen.success"))
-          toggleBackupModal()
-          setIsLoading(false)
-          return
+            setBackupResultMessage(translate("backupScreen.success"))
+            return
         }
-
-        Database.removeAllProofs()
-        setIsLoading(false)
         setBackupResultMessage(translate("backupScreen.deletedSuccess"))
-        toggleBackupModal()
-      } catch (e: any) {
-        handleError(e)
-      }
     }
-
-    const toggleBackupModal = () =>
-      setIsBackupModalVisible(previousState => !previousState)
-
-    const gotoLocalRecovery = function () {
-      navigation.navigate('LocalRecovery')
-    }
-
-    const gotoRemoteBackup = function () {
-        navigation.navigate('RemoteBackup')
-    }
-
-    const gotoRemoteRecovery = function () {
-      navigation.navigate('RemoteRecovery', {isAddressOnlyRecovery: true})
-    }
-
-    const checkSpent = async function () {
-      setIsLoading(true)
-      setIsHandleSpentFromSpendableSentToQueue(true)
-      WalletTask.handleSpentFromSpendable()      
-    }
-
 
     const increaseCounters = async function () {
-      const increaseAmount = 50
-      for (const mint of mintsStore.allMints) {
-        for(const counter of mint.proofsCounters) {
-          mint.increaseProofsCounter(counter.keyset, increaseAmount)
-        }            
-      }  
-      setInfo(translate("recoveryIndexesIncSuccess", { indCount: increaseAmount }))
+        setInfo(translate("recoveryIndexesIncSuccess", { indCount: increaseAmount }))
     }
-
-
-    const handleError = function (e: AppError): void {
-      setIsLoading(false)
-      setError(e)
-    }
-
-    const headerBg = useThemeColor('header')
 
     return (
-      <Screen preset='auto' style={$screen}>
-        <View style={[$headerContainer, {backgroundColor: headerBg}]}>
-          <Text preset="heading" text="Backup" style={{color: 'white'}} />
-        </View>
-        <View style={$contentContainer}>
-            <Card
-                style={$card}
-                HeadingComponent={
-                <>                
-                  <ListItem
-                    tx="backupScreen.remoteBackup"
-                    subTx="backupScreen.remoteBackupDescription"
-                    leftIcon='faUpRightFromSquare'
-                    leftIconColor={colors.palette.blue200}
-                    leftIconInverse={true}
-                    style={$item}
-                    onPress={gotoRemoteBackup}
-                    bottomSeparator={true}
-                  />
-                  <ListItem
-                    tx="walletAddressRecovery"
-                    subTx="walletAddressRecoveryDesc"
-                    leftIcon='faCircleUser'
-                    leftIconColor={colors.palette.iconGreyBlue400}
-                    leftIconInverse={true}
-                    style={$item}
-                    onPress={gotoRemoteRecovery}
-                  />
-                </>
-                }
+        <View>
+            <ListItem
+                tx="backupScreen.remoteBackup"
+                subTx="backupScreen.remoteBackupDescription"
             />
-            <Card
-                style={$card}
-                HeadingComponent={
-                <>
-                    <ListItem
-                    tx="backupScreen.localBackup"
-                    subTx="backupScreen.localBackupDescription"
-                    leftIcon='faDownload'
-                    leftIconColor={
-                        isLocalBackupOn
-                        ? colors.palette.success200
-                        : colors.palette.neutral400
-                    }
-                    leftIconInverse={true}
-                    RightComponent={
-                        <View style={$rightContainer}>
-                        <Switch
-                            onValueChange={toggleBackupSwitch}
-                            value={isLocalBackupOn}
-                        />
-                        </View>
-                    }
-                    style={$item}
-                    />
-                    {isLocalBackupOn && (
-                    <ListItem
-                        tx="backupScreen.recoveryTool"
-                        subTx="backupScreen.recoveryToolDescription"
-                        leftIcon='faUpload'
-                        leftIconColor={colors.palette.focus300}
-                        leftIconInverse={true}
-                        style={$item}
-                        onPress={gotoLocalRecovery}
-                        topSeparator={true}
-                    />
-                    )}                
-                </>
-                }
+            <ListItem
+                tx="walletAddressRecovery"
+                subTx="walletAddressRecoveryDesc"
             />
-            <Card
-                style={$card}
-                HeadingComponent={
-                <>                
-                    <ListItem
-                        tx="backupScreen.removeSpentCoins"
-                        subTx="backupScreen.removeSpentCoinsDescription"
-                        leftIcon='faRecycle'
-                        leftIconColor={colors.palette.secondary300}
-                        leftIconInverse={true}
-                        RightComponent={
-                            <View style={$rightContainer}>
-                                <Button
-                                    onPress={checkSpent}
-                                    text='Remove'
-                                    preset='secondary'                                           
-                                /> 
-                            </View>                           
-                        }
-                        style={$item}                        
-                    />                    
-                </>
-                }
-            /> 
-            <Card
-                style={$card}
-                HeadingComponent={
-                <>                
-                    <ListItem
-                        tx="increaseRecoveryIndexes"
-                        subTx="increaseRecoveryIndexesDesc"
-                        leftIcon='faArrowUp'
-                        leftIconColor={colors.palette.success300}
-                        leftIconInverse={true}
-                        RightComponent={
-                            <View style={$rightContainer}>
-                                <Button
-                                    onPress={increaseCounters}
-                                    text='Increase'
-                                    preset='secondary'                                           
-                                /> 
-                            </View>                           
-                        } 
-                        style={$item}                        
-                    />
-                </>
-                }
-            />       
-        {isLoading && <Loading />}
-        </View>
-        <BottomModal
-          isVisible={isBackupModalVisible}          
-          style={{paddingHorizontal: spacing.small}}
-          ContentComponent={
+            <ListItem
+                tx="backupScreen.localBackup"
+                subTx="backupScreen.localBackupDescription"
+            />
+            <ListItem
+                tx="backupScreen.recoveryTool"
+                subTx="backupScreen.recoveryToolDescription"
+            />
+            <ListItem
+                tx="backupScreen.removeSpentCoins"
+                subTx="backupScreen.removeSpentCoinsDescription"
+            />
+            <ListItem
+                tx="increaseRecoveryIndexes"
+                subTx="increaseRecoveryIndexesDesc"
+            />
             <ResultModalInfo
-              icon={'faDownload'}
-              iconColor={
-                isLocalBackupOn
-                  ? colors.palette.success200
-                  : colors.palette.neutral400
-              }
-              // title={
-              //   isLocalBackupOn ? 'Local backup is on' : 'Local backup is off'
-              // }
-              title={translate(isLocalBackupOn ? 'localBackupEnabled' : 'localBackupDisabled')}
-              message={backupResultMessage as string}
+                title={translate(isLocalBackupOn ? 'localBackupEnabled' : 'localBackupDisabled')}
             />
-          }
-          onBackButtonPress={toggleBackupModal}
-          onBackdropPress={toggleBackupModal}
-        />
-        {error && <ErrorModal error={error} />}
-        {info && <InfoModal message={info} />}
-      </Screen>
+        </View>
     )
-  },
-)
-
-const $screen: ViewStyle = {}
-
-const $headerContainer: TextStyle = {
-  alignItems: 'center',
-  padding: spacing.medium,
-  height: spacing.screenHeight * 0.1,
 }
-
-const $contentContainer: TextStyle = {
-  // flex: 1,
-  padding: spacing.extraSmall,
-  // alignItems: 'center',
-}
-
-const $card: ViewStyle = {
-  marginBottom: spacing.small,
-}
-
-const $item: ViewStyle = {
-  paddingHorizontal: spacing.small,
-  paddingLeft: 0,
-}
-
-const $rightContainer: ViewStyle = {
-  // padding: spacing.extraSmall,
-  // alignSelf: 'center',
-  marginLeft: spacing.tiny,
-  marginRight: -10
-}
-
 `
 it("should detect backupscreen tx and subTx keys properly", async () => {
 	const matches = parse(sourceCode, settings);
-	console.log(inspect(matches, { depth: null }))
+	
+	expect(matches).toHaveLength(17);
+	
+	// Function calls with translate()
+	expect(matches[0]).toEqual({
+		messageId: "backupScreen.result",
+		position: {
+			start: { line: 7, character: 26 },
+			end: { line: 7, character: 46 }
+		}
+	});
+	
+	expect(matches[1]).toEqual({
+		messageId: "noSpentEcashFound",
+		position: {
+			start: { line: 11, character: 28 },
+			end: { line: 11, character: 46 }
+		}
+	});
+	
+	expect(matches[2]).toEqual({
+		messageId: "backupScreen.success",
+		position: {
+			start: { line: 16, character: 47 },
+			end: { line: 16, character: 68 }
+		}
+	});
+	
+	expect(matches[3]).toEqual({
+		messageId: "backupScreen.deletedSuccess",
+		position: {
+			start: { line: 19, character: 43 },
+			end: { line: 19, character: 71 }
+		}
+	});
+	
+	expect(matches[4]).toEqual({
+		messageId: "recoveryIndexesIncSuccess",
+		position: {
+			start: { line: 23, character: 28 },
+			end: { line: 23, character: 54 }
+		}
+	});
+	
+	// JSX attributes - tx and subTx
+	expect(matches[5]).toEqual({
+		messageId: "backupScreen.remoteBackup",
+		position: {
+			start: { line: 29, character: 21 },
+			end: { line: 29, character: 47 }
+		}
+	});
+	
+	expect(matches[6]).toEqual({
+		messageId: "backupScreen.remoteBackupDescription",
+		position: {
+			start: { line: 30, character: 24 },
+			end: { line: 30, character: 61 }
+		}
+	});
+	
+	expect(matches[7]).toEqual({
+		messageId: "walletAddressRecovery",
+		position: {
+			start: { line: 33, character: 21 },
+			end: { line: 33, character: 43 }
+		}
+	});
+	
+	expect(matches[8]).toEqual({
+		messageId: "walletAddressRecoveryDesc",
+		position: {
+			start: { line: 34, character: 24 },
+			end: { line: 34, character: 50 }
+		}
+	});
+	
+	expect(matches[9]).toEqual({
+		messageId: "backupScreen.localBackup",
+		position: {
+			start: { line: 37, character: 21 },
+			end: { line: 37, character: 46 }
+		}
+	});
+	
+	expect(matches[10]).toEqual({
+		messageId: "backupScreen.localBackupDescription",
+		position: {
+			start: { line: 38, character: 24 },
+			end: { line: 38, character: 60 }
+		}
+	});
+	
+	expect(matches[11]).toEqual({
+		messageId: "backupScreen.recoveryTool",
+		position: {
+			start: { line: 41, character: 21 },
+			end: { line: 41, character: 47 }
+		}
+	});
+	
+	expect(matches[12]).toEqual({
+		messageId: "backupScreen.recoveryToolDescription",
+		position: {
+			start: { line: 42, character: 24 },
+			end: { line: 42, character: 61 }
+		}
+	});
+	
+	expect(matches[13]).toEqual({
+		messageId: "backupScreen.removeSpentCoins",
+		position: {
+			start: { line: 45, character: 21 },
+			end: { line: 45, character: 51 }
+		}
+	});
+	
+	expect(matches[14]).toEqual({
+		messageId: "backupScreen.removeSpentCoinsDescription",
+		position: {
+			start: { line: 46, character: 24 },
+			end: { line: 46, character: 65 }
+		}
+	});
+	
+	expect(matches[15]).toEqual({
+		messageId: "increaseRecoveryIndexes",
+		position: {
+			start: { line: 49, character: 21 },
+			end: { line: 49, character: 45 }
+		}
+	});
+	
+	expect(matches[16]).toEqual({
+		messageId: "increaseRecoveryIndexesDesc",
+		position: {
+			start: { line: 50, character: 24 },
+			end: { line: 50, character: 52 }
+		}
+	});
 });
