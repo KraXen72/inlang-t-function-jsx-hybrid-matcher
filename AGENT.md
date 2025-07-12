@@ -1,11 +1,12 @@
 # AGENT.md - Inlang t-function JSX Hybrid Matcher
 
 ## Build & Test Commands
-- `npm run build` - Build for production (esbuild -> dist/)
-- `npm run dev` - Watch mode development build
-- `npm run test` - Run all tests (builds first, then vitest)
-- `npm run test2` - Run single test file (ownName.test.ts)
-- `npx vitest run tests/[filename].test.ts` - Run specific test file
+- `pnpm build` - Build for production (esbuild -> dist/)
+- `pnpm dev` - Watch mode development build
+- `pnpm test` - Run all tests (builds first, then vitest)
+- `pnpm test2` - Run single test file (ownName.test.ts)
+- `vitest run tests/[filename].test.ts` - Run specific test file 
+    - `vitest` should be installed globally. in case it isn't, add it through `pnpm add -g vitest`
 
 ## Architecture
 - **Plugin Type**: Inlang marketplace plugin for i18n message matching
@@ -25,6 +26,7 @@
 - **Formatting**: No specific formatter configured, follow existing patterns
 
 ## ALWAYS REMEMBER
+- use the current package manager tool, e.g. pnpm instead of the default (npm) if applicable
 - do not overcomplicate stuff. always try to think of a simple & elegant solution which REQUIRES MINIMAL CHANGES
 - if you notice that there is a better solution than one i am currently using/asking about, but would require a lot of refactoring, do what i at the time but propose this new solution, what it entails, why it is better and some potential drawbacks
 - always try to change as little as possible to do what i want from you

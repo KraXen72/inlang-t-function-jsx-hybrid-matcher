@@ -1,15 +1,13 @@
 import { it, expect } from "vitest";
 import { parse } from "../src/ideExtension/messageReferenceMatchers.js";
-import type { PluginSettings } from "../src/settings.js";
-
-let settings: PluginSettings = {
+import type { IPluginSettings } from "../src/settings.js";
+import { inspect } from "node:util";
+let settings: IPluginSettings = {
 	preferredTfuncName: "translate",
 	recognizedTfuncNames: ["translate"],
 	recognizedJSXAttributes: ["tx", "subTx"],
 };
-
-const sourceCode = `
-import {observer} from 'mobx-react-lite'
+const sourceCode = `import {observer} from 'mobx-react-lite'
 import React, {FC, useEffect, useState} from 'react'
 import {Switch, TextStyle, View, ViewStyle} from 'react-native'
 import {colors, spacing, useThemeColor} from '../theme'
@@ -338,19 +336,5 @@ const $rightContainer: ViewStyle = {
 `
 it("should detect backupscreen tx and subTx keys properly", async () => {
 	const matches = parse(sourceCode, settings);
-	const lines = sourceCode.split("\n");
-	// it's broken here for the jsx - the ending is bad and slices don't work
-	for (const match of matches) {
-		const lineStart = match.position.start.line - 1;
-		const lineEnd = match.position.end.line - 1;
-		let slice: string;
-		if (lineStart !== lineEnd) {
-			slice = lines[lineStart].slice(match.position.start.character) + lines[lineEnd].slice(0, match.position.end.character);
-		} else {
-			slice = lines[lineStart].slice(match.position.start.character, match.position.end.character);
-		}
-		console.log(">", match.messageId, match.position.start, match.position.end, "\n>>",`'${slice}'`, "\n");
-	}
-	// expect(matches).toHaveLength(1);
-	// expect(matches[0]?.messageId).toBe("notFound.title");
+	console.log(inspect(matches, { depth: null }))
 });

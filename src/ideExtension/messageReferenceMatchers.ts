@@ -112,15 +112,16 @@ function handleFunctionCall(
 		const startCharInLine = findQuoteStartInLine(sourceCode, start, firstArg.loc.start);
 		const endCharInLine = findQuoteEndInLine(sourceCode, end, firstArg.loc.end);
 
+		// all line offsets should be one-based according to Parismmon and inlang's t-func-matcher
 		matches.push({
 			messageId,
 			position: {
 				start: {
-					line: firstArg.loc.start.line - 1, // Convert to 0-based
+					line: firstArg.loc.start.line,
 					character: startCharInLine
 				},
 				end: {
-					line: firstArg.loc.end.line - 1, // Convert to 0-based
+					line: firstArg.loc.end.line,
 					character: endCharInLine
 				}
 			}
@@ -185,11 +186,11 @@ function handleJSXAttribute(
 		messageId,
 		position: {
 			start: {
-				line: valueLoc.start.line - 1, // Convert to 0-based
+				line: valueLoc.start.line,
 				character: startCharInLine
 			},
 			end: {
-				line: valueLoc.end.line - 1, // Convert to 0-based
+				line: valueLoc.end.line,
 				character: endCharInLine
 			}
 		}
@@ -207,7 +208,7 @@ function getFunctionName(callee: TSESTree.Expression): string | null {
 }
 
 function findQuoteStartInLine(sourceCode: string, absolutePosition: number, loc: { line: number; column: number }): number {
-	// Find the opening quote and return character position within the line (after the quote)
+	// Find the opening quote and return line-relative character position (after the quote)
 	const char = sourceCode[absolutePosition];
 	if (char === '"' || char === "'") {
 		return loc.column + 1;
@@ -216,7 +217,7 @@ function findQuoteStartInLine(sourceCode: string, absolutePosition: number, loc:
 }
 
 function findQuoteEndInLine(sourceCode: string, absolutePosition: number, loc: { line: number; column: number }): number {
-	// Find the closing quote and return character position within the line (before the quote)
+	// Find the closing quote and return line-relative character position (before the quote)
 	const char = sourceCode[absolutePosition - 1];
 	if (char === '"' || char === "'") {
 		return loc.column - 1;
@@ -282,7 +283,7 @@ function findQuoteEndInLine(sourceCode: string, absolutePosition: number, loc: {
 // function getLineAndColumn(sourceCode: string, index: number): { line: number; character: number } {
 // 	const lines = sourceCode.substring(0, index).split('\n');
 // 	return {
-// 		line: lines.length - 1,
+// 		line: lines.length,
 // 		character: lines[lines.length - 1].length
 // 	};
 // }
