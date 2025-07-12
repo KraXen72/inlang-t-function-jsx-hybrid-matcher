@@ -1,7 +1,7 @@
 import { it, expect } from "vitest";
 import { parse } from "../src/ideExtension/messageReferenceMatchers.js";
 import type { IPluginSettings } from "../src/settings.js";
-import { inspect } from "node:util";
+// import { inspect } from "node:util";
 let settings: IPluginSettings = {
   preferredTfuncName: "translate",
   recognizedTfuncNames: ["translate"],
@@ -42,7 +42,7 @@ const sourceCode = `<Card
 
 it("should highlight custom tx attrs from settings", () => {
   const matches = parse(sourceCode, settings);
-  console.log(inspect(matches, { depth: null }));
+  // console.log(inspect(matches, { depth: null }));
 
   expect(matches).toHaveLength(2);
   expect(matches[0]).toEqual({

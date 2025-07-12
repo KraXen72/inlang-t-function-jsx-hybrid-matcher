@@ -1,4 +1,5 @@
 import { context } from "esbuild";
+import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill';
 
 // eslint-disable-next-line no-undef
 const isProduction = process.env.NODE_ENV === "production";
@@ -15,9 +16,20 @@ const ctx = await context({
 	bundle: true,
 	// esm to work in the browser
 	format: "esm",
-	platform: "node",
+	platform: isProduction ? "browser" : "node",
 	// sourcemaps are unused at the moment
 	sourcemap: false,
+	plugins: isProduction ? [
+		NodeModulesPolyfillPlugin(),
+		{
+			name: 'tty-mock',
+			setup(build) {
+				build.onResolve({ filter: /^tty$/ }, () => ({ 
+					path: new URL('./mocks/tty.js', import.meta.url).pathname
+				}));
+			},
+		}
+	] : [],
 });
 
 if (isProduction === false) {
