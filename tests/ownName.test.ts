@@ -1,8 +1,9 @@
 import { it, expect } from "vitest";
 import { parse } from "../src/ideExtension/messageReferenceMatchers.js";
-import type { PluginSettings } from "../src/settings.js";
+import type { IPluginSettings } from "../src/settings.js";
+import { inspect } from "node:util";
 
-let settings: PluginSettings = {
+let settings: IPluginSettings = {
 	preferredTfuncName: "translate",
 	recognizedTfuncNames: ["translate"],
 	recognizedJSXAttributes: ["tx", "headingTx", "footerTx"],
@@ -45,5 +46,17 @@ const sourceCode = `
 
 it("should highlight custom tx attrs from settings", () => {
 	const matches = parse(sourceCode, settings);
-	console.log(matches)
+	console.log(inspect(matches, { depth: null }));
+
+	expect(matches).toHaveLength(2);
+	expect(matches).toContain({
+		messageId: 'contactsScreen.ownName.chooseOwnName',
+		start: { line: 3, character: 21 },
+		end: { line: 3, charcter: 57 }
+	})
+	expect(matches).toContain({
+		messageId: 'contactsScreen.ownName.chooseOwnNameFooter',
+		start: { line: 29, character: 12 },
+		end: { line: 29, charcter: 54 }
+	})
 })
