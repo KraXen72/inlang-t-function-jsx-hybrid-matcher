@@ -1,139 +1,295 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { parse as parseTypeScript } from '@typescript-eslint/typescript-estree';
+import type { TSESTree } from '@typescript-eslint/typescript-estree';
+import type { IPluginSettings } from '../settings';
+
 /**
- * Using parsimmon because:
- * inlang said so :pensive:
+ * it's suppsosed to return 1 extra character worth of col. offset at the end,
+ * to place the message there nicely (after the string has ended)
  */
-import Parsimmon from "parsimmon"
-import type { PluginSettings } from "../settings.js"
-
-export function createMessageReferenceParser(translateFunctionNames: string[], jsxAttributes: string[]) {
-	const parser = Parsimmon.createLanguage({
-		// The entry point for message reference matching.
-		//
-		// 1. Match a t function call or any other character.
-		// 2. Match as many of these as possible.
-		// 3. Filter out any non-object matches.
-		entry: (r) => {
-			return Parsimmon.alt(Parsimmon.alt(r.FunctionCall!, r.JSXAttribute!), Parsimmon.any)
-				.many()
-				.map((matches) => matches.flat().filter((match) => typeof match === "object")); // filter arbitrary characters
-		},
-
-		// A string literal is either a single or double quoted string
-		stringLiteral: (r) => {
-			return Parsimmon.alt(r.doubleQuotedString!, r.singleQuotedString!);
-		},
-
-		// Double quoted string literal parser
-		//
-		// 1. Start with a double quote.
-		// 2. Then match any character that is not a double quote.
-		// 3. End with a double quote.
-		doubleQuotedString: () => {
-			return Parsimmon.string('"')
-				.then(Parsimmon.regex(/[^"]*/))
-				.skip(Parsimmon.string('"'));
-		},
-
-		// Single quoted string literal parser
-		//
-		// 1. Start with a single quote.
-		// 2. Then match any character that is not a single quote.
-		// 3. End with a single quote.
-		singleQuotedString: () => {
-			return Parsimmon.string("'")
-				.then(Parsimmon.regex(/[^']*/))
-				.skip(Parsimmon.string("'"));
-		},
-
-		// Parser for t function calls
-		FunctionCall: function (r) {
-			return Parsimmon.seqMap(
-				Parsimmon.regex(/[^a-zA-Z0-9]/), // no preceding letters or numbers
-				Parsimmon.alt(...(translateFunctionNames.map((fname) => Parsimmon.string(fname).skip(Parsimmon.string("("))))), 
-				Parsimmon.index, // start position of the message id
-				r.stringLiteral!, // message id
-				Parsimmon.index, // end position of the message id
-				Parsimmon.regex(/[^)]*/), // ignore the rest of the function call
-				Parsimmon.string(")"), // end with a closing parenthesis
-				(_, __,start, messageId, end) => {
-					return {
-						messageId,
-						position: {
-							start: {
-								line: start.line,
-								character: start.column,
-							},
-							end: {
-								line: end.line,
-								character: end.column,
-							},
-						},
-					};
-				}
-			);
-		},
-
-		JSXAttribute: function (r) {
-			return Parsimmon.seqMap(
-				Parsimmon.string("<"),
-				Parsimmon.regex(/[A-Z][\w-]*/), // JSX component name (allowing hyphens)
-				Parsimmon.regex(/\s+/), // skip whitespace
-				Parsimmon.sepBy1(
-					Parsimmon.seq(
-						Parsimmon.regex(/\w+/) // attribute name
-							.skip(Parsimmon.regex(/\s*=\s*{?/)), // equal sign and optional {
-						Parsimmon.index,
-						r.stringLiteral, // attribute value
-					),
-					Parsimmon.regex(/}?\s+/) // skip whitespace between attributes
-				),
-				(_, componentName, __, attributesRaw) => {
-					// console.log("ComponentName:", componentName);
-					// console.log("Attributes:", attributesRaw);
-					const matches: any[] = [];
-					for (const [name, start, value] of attributesRaw) {
-						if (!jsxAttributes.includes(name)) continue;
-						// console.log("Message ID:", value);
-						matches.push({
-							messageId: value,
-							position: {
-								start: {
-									line: start.line,
-									character: start.column,
-								},
-								end: {
-									line: start.line,
-									character: start.column + value.length + 3
-								}
-
-								// this caused a hard-to-debug bug in vscode
-								// https://github.com/microsoft/vscode/blob/b6924a1d2e5249f97d1a5e6d3a1ad0edb2e33544/src/vs/workbench/api/common/extHostTypes.ts#L162
-								// basically, it would set it to the 0th character of the next line
-								// end: {
-								// 	line: end.line,
-								// 	character: end.column,
-								// },
-							},
-						})
-					}
-					return matches.length > 0 ? matches : false;
-				}
-			)
-		},
-	});
-	return parser
+interface MessageReferenceMatch {
+	messageId: string;
+	position: {
+		start: {
+			line: number;
+			character: number;
+		};
+		end: {
+			line: number;
+			character: number;
+		};
+	};
 }
 
-// Parse the expression
-export function parse(sourceCode: string, settings: PluginSettings) {
-	try {
-		const parser = createMessageReferenceParser(
-			settings?.recognizedTfuncNames ?? ['t'],
-			settings?.recognizedJSXAttributes ?? ['']
-		)
-		return parser.entry!.tryParse(sourceCode)
-	} catch {
-		return []
+// Default configuration - can be made configurable later
+const DEFAULT_CONFIG: IPluginSettings = {
+	recognizedTfuncNames: ['t', 'translate', 'i18n'],
+	recognizedJSXAttributes: ['tx', 'i18nKey', 'translationKey']
+};
+
+/**
+ * Enhanced parser using TypeScript ESTree for robust JSX/TSX parsing
+ * Handles both function calls and JSX attributes with proper error recovery
+ */
+export function parse(sourceCode: string, config: IPluginSettings = DEFAULT_CONFIG): MessageReferenceMatch[] {
+	const matches: MessageReferenceMatch[] = [];
+
+	// Try parsing with multiple strategies, from most accurate to most tolerant
+	const parseStrategies = [
+		() => parseWithStandardConfig(sourceCode),
+		() => parseWithWrappedJSX(sourceCode),
+		() => parseAsExpression(sourceCode),
+		() => parseWithFixedSyntax(sourceCode)
+	];
+
+	for (const strategy of parseStrategies) {
+		try {
+			const ast = strategy();
+			if (ast) {
+				traverseNode(ast, sourceCode, matches, config);
+				return matches; // Success, return early
+			}
+		// oxlint-disable-next-line no-unused-vars
+		} catch (error) {
+			continue; // next strategy
+		}
+	}
+
+	// If all parsing strategies fail, return empty array
+	// In IDE context, this is acceptable as highlights will reappear when code becomes valid
+	console.warn("All parsing strategies failed, returning empty matches");
+	return matches;
+}
+
+/**
+ * Parse with standard configuration
+ */
+function parseWithStandardConfig(sourceCode: string) {
+	return parseTypeScript(sourceCode, {
+		jsx: true,
+		range: true,
+		loc: true,
+		errorOnUnknownASTType: false,
+		errorOnTypeScriptSyntacticAndSemanticIssues: false,
+		allowInvalidAST: true,
+		tokens: false,
+		comment: false
+	});
+}
+
+/**
+ * Wrap JSX fragments in a valid parent element
+ */
+function parseWithWrappedJSX(sourceCode: string) {
+	// If it looks like JSX fragments, wrap them
+	if (sourceCode.includes('<') && !sourceCode.trim().startsWith('<>') && !sourceCode.includes('function') && !sourceCode.includes('const ')) {
+		const wrappedCode = `<>${sourceCode}</>`;
+		return parseTypeScript(wrappedCode, {
+			jsx: true,
+			range: true,
+			loc: true,
+			errorOnUnknownASTType: false,
+			errorOnTypeScriptSyntacticAndSemanticIssues: false,
+			allowInvalidAST: true,
+			tokens: false,
+			comment: false
+		});
+	}
+	return null;
+}
+
+/**
+ * Parse as expression wrapped in parentheses
+ */
+function parseAsExpression(sourceCode: string) {
+	const wrappedCode = `(${sourceCode})`;
+	return parseTypeScript(wrappedCode, {
+		jsx: true,
+		range: true,
+		loc: true,
+		errorOnUnknownASTType: false,
+		errorOnTypeScriptSyntacticAndSemanticIssues: false,
+		allowInvalidAST: true,
+		tokens: false,
+		comment: false
+	});
+}
+
+/**
+ * Fix common syntax issues and try parsing
+ */
+function parseWithFixedSyntax(sourceCode: string) {
+	let fixedCode = sourceCode;
+	
+	// Fix unterminated strings by adding closing quotes
+	const lines = fixedCode.split('\n');
+	const fixedLines = lines.map(line => {
+		// Simple heuristic: if line has uneven quotes, try to close them
+		const doubleQuotes = (line.match(/"/g) || []).length;
+		const singleQuotes = (line.match(/'/g) || []).length;
+		
+		if (doubleQuotes % 2 === 1) {
+			line += '"';
+		}
+		if (singleQuotes % 2 === 1) {
+			line += "'";
+		}
+		return line;
+	});
+	
+	fixedCode = fixedLines.join('\n');
+	
+	// Try wrapping in a component if it looks like JSX
+	if (fixedCode.includes('<') && !fixedCode.includes('function')) {
+		fixedCode = `function TempComponent() { return (${fixedCode}); }`;
+	}
+	
+	return parseTypeScript(fixedCode, {
+		jsx: true,
+		range: true,
+		loc: true,
+		errorOnUnknownASTType: false,
+		errorOnTypeScriptSyntacticAndSemanticIssues: false,
+		allowInvalidAST: true,
+		tokens: false,
+		comment: false
+	});
+}
+
+function traverseNode(
+	node: any,
+	sourceCode: string,
+	matches: MessageReferenceMatch[],
+	config: IPluginSettings
+): void {
+	if (!node || typeof node !== 'object') return;
+
+	// Handle function calls: t("message"), translate("message"), etc.
+	if (node.type === 'CallExpression') {
+		handleFunctionCall(node, sourceCode, matches, config);
+	}
+
+	// Handle JSX attributes: <Text tx="message" />
+	if (node.type === 'JSXAttribute') {
+		handleJSXAttribute(node, sourceCode, matches, config);
+	}
+
+	// Recursively traverse child nodes
+	for (const key in node) {
+		const child = node[key];
+		if (Array.isArray(child)) {
+			child.forEach(item => traverseNode(item, sourceCode, matches, config));
+		} else if (child && typeof child === 'object') {
+			traverseNode(child, sourceCode, matches, config);
+		}
 	}
 }
+
+function createPositionObject(messageId: string, loc: TSESTree.SourceLocation): MessageReferenceMatch {
+	// in ts-estree, column offsets are 0-based
+	// inlang's Sherlock expects 1-based column offsets (atleast from what i can tell their t-func matcher is sending from parsimmon)
+	// ts-estree gives offsets for the raw string, e.g. for:
+  // "some-id"
+	// the column offsets are: { start: 0, end: 9 }
+	// we need 1-based, so we'd add +1 to both: { start: 1, end: 10 }
+	// to skip the initial ",' or ` we add +1 to the start: { start: 2, end: 10 }
+
+	return {
+		messageId,
+		position: {
+			start: {
+				line: loc.start.line,
+				character: loc.start.column + 2
+			},
+			end: {
+				line: loc.end.line,
+				character: loc.end.column + 1
+			}
+		}
+	} satisfies MessageReferenceMatch
+}
+
+function handleFunctionCall(
+	node: TSESTree.CallExpression,
+	sourceCode: string,
+	matches: MessageReferenceMatch[],
+	config: IPluginSettings
+): void {
+	// Check if it's a function we're interested in
+	const functionName = getFunctionName(node.callee);
+	if (!functionName || !config?.recognizedTfuncNames || !config.recognizedTfuncNames.includes(functionName)) {
+		return;
+	}
+
+	// Get the first argument (should be the message key)
+	const firstArg = node.arguments[0];
+	if (!firstArg || firstArg.type !== 'Literal' || typeof firstArg.value !== 'string') {
+		return;
+	}
+	console.log("handleFunctionCall matched location:", firstArg)
+
+	// Extract position information
+	if (firstArg.range && firstArg.loc) {
+		const messageId = firstArg.value;
+		matches.push(createPositionObject(messageId, firstArg.loc));
+	}
+}
+
+function handleJSXAttribute(
+	node: TSESTree.JSXAttribute,
+	sourceCode: string,
+	matches: MessageReferenceMatch[],
+	config: IPluginSettings
+): void {
+	// Check if it's an attribute we're interested in
+	if (node.name.type !== 'JSXIdentifier') return;
+
+	const attributeName = node.name.name;
+	if (!attributeName || !config.recognizedJSXAttributes || !config.recognizedJSXAttributes.includes(attributeName)) {
+		return;
+	}
+
+	// Get the attribute value
+	const value = node.value;
+	if (!value) return;
+
+	let messageId: string;
+	let valueLoc: TSESTree.SourceLocation;
+
+	if (value.type === 'Literal' && typeof value.value === 'string') {
+		// Direct string: tx="message"
+		messageId = value.value;
+		valueLoc = value.loc!;
+
+	} else if (value.type === 'JSXExpressionContainer' && value.expression.type === 'Literal' && typeof value.expression.value === 'string') {
+		// Expression with string: tx={"message"}
+		messageId = value.expression.value;
+		valueLoc = value.expression.loc!;
+
+	} else if (value.type === 'JSXExpressionContainer' && value.expression.type === 'TemplateLiteral' && value.expression.expressions.length === 0 && value.expression.quasis.length === 1) {
+		// Template literal without interpolation: tx={`message`}
+		const quasiValue = value.expression.quasis[0]?.value;
+		if (!quasiValue || (!quasiValue.cooked && !quasiValue.raw)) return;
+		messageId = quasiValue.cooked || quasiValue.raw || '';
+		if (!messageId) return;
+
+		valueLoc = value.expression.loc!;
+	} else { 
+		return;
+	}
+
+	matches.push(createPositionObject(messageId, valueLoc));
+}
+
+function getFunctionName(callee: TSESTree.Expression): string | null {
+	if (callee.type === 'Identifier') {
+		return callee.name;
+	}
+	if (callee.type === 'MemberExpression' && callee.property.type === 'Identifier') {
+		return callee.property.name;
+	}
+	return null;
+}
+
+
+
+

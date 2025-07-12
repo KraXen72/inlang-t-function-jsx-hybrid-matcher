@@ -21,7 +21,7 @@ export const PluginSettings = Type.Object({
 		examples: ["tx", "subTx"]
 	}))
 })
-export type PluginSettings = Static<typeof PluginSettings>
+export type IPluginSettings = Static<typeof PluginSettings>
 
 // export const PluginSettings = {}
 // export type PluginSettings = {}

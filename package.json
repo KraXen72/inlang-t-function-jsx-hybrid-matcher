@@ -1,32 +1,25 @@
 {
-	"name": "inlang-t-function-jsx-hybrid-matcher",
-	"private": true,
-	"version": "0.1.1",
-	"type": "module",
-	"files": [
-		"./dist"
-	],
-	"scripts": {
-		"build": "inlang module build --entry ./src/index.ts",
-		"dev": "inlang module build --entry ./src/index.ts --watch",
-		"test": "tsc --noEmit && vitest run"
-	},
-	"devDependencies": {
-		"@inlang/cli": "^3.0.12",
-		"@inlang/sdk": "^2.4.9",
-		"@lix-js/client": "^2.2.1",
-		"@types/parsimmon": "^1.10.9",
-		"typescript": "^5.8.3",
-		"vitest": "^3.2.4"
-	},
-	"dependencies": {
-		"@inlang/plugin": "^2.4.14",
-		"@sinclair/typebox": "^0.34.37",
-		"parsimmon": "^1.18.1"
-	},
-	"pnpm": {
-		"patchedDependencies": {
-			"parsimmon@1.18.1": "patches/parsimmon@1.18.1.patch"
-		}
-	}
+  "name": "@inlang/plugin-t-function-jsx-matcher",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "NODE_ENV=production node ./build.js",
+    "dev": " node ./build.js",
+    "test": "NODE_ENV=production node ./build.js && vitest run",
+    "test2": "NODE_ENV=production node ./build.js && vitest run ./tests/ownName.test.ts"
+  },
+  "dependencies": {
+    "@inlang/plugin": "^2.4.14",
+    "@sinclair/typebox": "^0.34.37",
+    "@typescript-eslint/typescript-estree": "^6.21.0"
+  },
+  "devDependencies": {
+    "@inlang/cli": "^3.0.12",
+    "@inlang/sdk": "^2.4.9",
+    "@lix-js/client": "^2.2.1",
+    "esbuild": "^0.25.6",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
 }
