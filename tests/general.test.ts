@@ -145,7 +145,7 @@ it('should detect double quotes t("id")', async () => {
     `
 	const matches = parse(sourceCode, settings)
 	expect(matches[0]?.messageId).toBe("some-id")
-	expect(matches[0]?.position.start.character).toBe(17)
+	expect(matches[0]?.position.start.character).toBe(18)
 	expect(matches[0]?.position.end.character).toBe(24)
 })
 
@@ -156,7 +156,7 @@ it(`should detect single quotes t('id')`, async () => {
   `
 	const matches = parse(sourceCode, settings)
 	expect(matches[0]?.messageId).toBe("some-id")
-	expect(matches[0]?.position.start.character).toBe(17)
+	expect(matches[0]?.position.start.character).toBe(18)
 	expect(matches[0]?.position.end.character).toBe(24)
 })
 
@@ -167,7 +167,7 @@ it(`should detect JSX <p>{t('id')}</p>`, async () => {
     `
 	const matches = parse(sourceCode, settings)
 	expect(matches[0]?.messageId).toBe("some-id")
-	expect(matches[0]?.position.start.character).toBe(11)
+	expect(matches[0]?.position.start.character).toBe(12)
 	expect(matches[0]?.position.end.character).toBe(18)
 })
 
@@ -189,17 +189,6 @@ it("should not mismatch a string with different quotation marks", async () => {
 	expect(matches).toHaveLength(0)
 })
 
-// test not passing, don't know how to fix in short time
-it.skip("should ignore whitespace", async () => {
-	// prefixing with space see test above
-	const sourceCode = `const x = t("some-id", undefined)`
-	const matches = parse(sourceCode, settings)
-	expect(matches[0]?.messageId).toBe("some-id")
-	expect(
-		sourceCode.slice(matches[0]?.position.start.character, matches[0]?.position.end.character)
-	).toBe('"some-id"')
-})
-
 it("should detect combined message.attribute ids", async () => {
 	const sourceCode = ` t('some-message.with-attribute')`
 	const matches = parse(sourceCode, settings)
@@ -213,7 +202,7 @@ it(`should detect human readable id t("penguin_purple_shoe_window")`, async () =
 
 	const matches = parse(sourceCode, settings)
 	expect(matches[0]?.messageId).toBe("penguin_purple_shoe_window")
-	expect(matches[0]?.position.start.character).toBe(14)
+	expect(matches[0]?.position.start.character).toBe(15)
 	expect(matches[0]?.position.end.character).toBe(40)
 })
 

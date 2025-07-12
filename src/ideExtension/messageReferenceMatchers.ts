@@ -29,31 +29,127 @@ const DEFAULT_CONFIG: IPluginSettings = {
 export function parse(sourceCode: string, config: IPluginSettings = DEFAULT_CONFIG): MessageReferenceMatch[] {
 	const matches: MessageReferenceMatch[] = [];
 
-	try {
-		// Parse with TypeScript ESTree - handles JSX/TSX robustly
-		const ast = parseTypeScript(sourceCode, {
+	// Try parsing with multiple strategies, from most accurate to most tolerant
+	const parseStrategies = [
+		() => parseWithStandardConfig(sourceCode),
+		() => parseWithWrappedJSX(sourceCode),
+		() => parseAsExpression(sourceCode),
+		() => parseWithFixedSyntax(sourceCode)
+	];
+
+	for (const strategy of parseStrategies) {
+		try {
+			const ast = strategy();
+			if (ast) {
+				traverseNode(ast, sourceCode, matches, config);
+				return matches; // Success, return early
+			}
+		// oxlint-disable-next-line no-unused-vars
+		} catch (error) {
+			// Continue to next strategy
+			continue;
+		}
+	}
+
+	// If all parsing strategies fail, return empty array
+	// In IDE context, this is acceptable as highlights will reappear when code becomes valid
+	console.warn("All parsing strategies failed, returning empty matches");
+	return matches;
+}
+
+/**
+ * Parse with standard configuration
+ */
+function parseWithStandardConfig(sourceCode: string) {
+	return parseTypeScript(sourceCode, {
+		jsx: true,
+		range: true,
+		loc: true,
+		errorOnUnknownASTType: false,
+		errorOnTypeScriptSyntacticAndSemanticIssues: false,
+		allowInvalidAST: true,
+		tokens: false,
+		comment: false
+	});
+}
+
+/**
+ * Wrap JSX fragments in a valid parent element
+ */
+function parseWithWrappedJSX(sourceCode: string) {
+	// If it looks like JSX fragments, wrap them
+	if (sourceCode.includes('<') && !sourceCode.trim().startsWith('<>') && !sourceCode.includes('function') && !sourceCode.includes('const ')) {
+		const wrappedCode = `<>${sourceCode}</>`;
+		return parseTypeScript(wrappedCode, {
 			jsx: true,
 			range: true,
 			loc: true,
 			errorOnUnknownASTType: false,
 			errorOnTypeScriptSyntacticAndSemanticIssues: false,
-			allowInvalidAST: true, // Allow parsing of incomplete/invalid code
+			allowInvalidAST: true,
 			tokens: false,
 			comment: false
 		});
-
-		// Traverse the AST to find matches
-		traverseNode(ast, sourceCode, matches, config);
-
-	} catch (error) {
-		console.error("parsing failed: ", error);
-		return []
-
-		// If parsing fails completely, try to extract simple patterns with regex fallback
-		// return parseWithRegexFallback(sourceCode, config);
 	}
+	return null;
+}
 
-	return matches;
+/**
+ * Parse as expression wrapped in parentheses
+ */
+function parseAsExpression(sourceCode: string) {
+	const wrappedCode = `(${sourceCode})`;
+	return parseTypeScript(wrappedCode, {
+		jsx: true,
+		range: true,
+		loc: true,
+		errorOnUnknownASTType: false,
+		errorOnTypeScriptSyntacticAndSemanticIssues: false,
+		allowInvalidAST: true,
+		tokens: false,
+		comment: false
+	});
+}
+
+/**
+ * Fix common syntax issues and try parsing
+ */
+function parseWithFixedSyntax(sourceCode: string) {
+	let fixedCode = sourceCode;
+	
+	// Fix unterminated strings by adding closing quotes
+	const lines = fixedCode.split('\n');
+	const fixedLines = lines.map(line => {
+		// Simple heuristic: if line has uneven quotes, try to close them
+		const doubleQuotes = (line.match(/"/g) || []).length;
+		const singleQuotes = (line.match(/'/g) || []).length;
+		
+		if (doubleQuotes % 2 === 1) {
+			line += '"';
+		}
+		if (singleQuotes % 2 === 1) {
+			line += "'";
+		}
+		return line;
+	});
+	
+	fixedCode = fixedLines.join('\n');
+	
+	// Try wrapping in a component if it looks like JSX
+	if (fixedCode.includes('<') && !fixedCode.includes('function')) {
+		fixedCode = `function TempComponent() { return (${fixedCode}); }`;
+	}
+	
+	return parseTypeScript(fixedCode, {
+		jsx: true,
+		range: true,
+		loc: true,
+		errorOnUnknownASTType: false,
+		errorOnTypeScriptSyntacticAndSemanticIssues: false,
+		allowInvalidAST: true,
+		tokens: false,
+		comment: false
+	});
 }
 
 function traverseNode(
@@ -102,15 +198,14 @@ function handleFunctionCall(
 	if (!firstArg || firstArg.type !== 'Literal' || typeof firstArg.value !== 'string') {
 		return;
 	}
+	console.log("handleFunctionCall matched location:", firstArg)
 
 	// Extract position information
 	if (firstArg.range && firstArg.loc) {
 		const messageId = firstArg.value;
-		const [start, end] = firstArg.range;
-
-		// Adjust positions to exclude quotes
-		const startCharInLine = findQuoteStartInLine(sourceCode, start, firstArg.loc.start);
-		const endCharInLine = findQuoteEndInLine(sourceCode, end, firstArg.loc.end);
+		// Convert to line-relative, one-based positions excluding quotes
+		const startCharInLine = firstArg.loc.start.column + 1;
+		const endCharInLine = firstArg.loc.end.column + 1;
 
 		// all line offsets should be one-based according to Parismmon and inlang's t-func-matcher
 		matches.push({
@@ -148,39 +243,33 @@ function handleJSXAttribute(
 	if (!value) return;
 
 	let messageId: string;
-	let valueRange: [number, number];
 	let valueLoc: TSESTree.SourceLocation;
 
 	if (value.type === 'Literal' && typeof value.value === 'string') {
 		// Direct string: tx="message"
 		messageId = value.value;
-		valueRange = value.range!;
 		valueLoc = value.loc!;
-	} else if (
-		value.type === 'JSXExpressionContainer' &&
-		value.expression.type === 'Literal' &&
-		typeof value.expression.value === 'string') {
+
+	} else if (value.type === 'JSXExpressionContainer' && value.expression.type === 'Literal' && typeof value.expression.value === 'string') {
 		// Expression with string: tx={"message"}
 		messageId = value.expression.value;
-		valueRange = value.expression.range!;
 		valueLoc = value.expression.loc!;
-	} else if (
-		value.type === 'JSXExpressionContainer' &&
-		value.expression.type === 'TemplateLiteral' &&
-		value.expression.expressions.length === 0 &&
-		value.expression.quasis.length === 1) {
+
+	} else if (value.type === 'JSXExpressionContainer' && value.expression.type === 'TemplateLiteral' && value.expression.expressions.length === 0 && value.expression.quasis.length === 1) {
 		// Template literal without interpolation: tx={`message`}
-		messageId = value.expression.quasis[0].value.cooked || value.expression.quasis[0].value.raw;
-		valueRange = value.expression.range!;
+		const quasiValue = value.expression.quasis[0]?.value;
+		if (!quasiValue || (!quasiValue.cooked && !quasiValue.raw)) return;
+		messageId = quasiValue.cooked || quasiValue.raw || '';
+		if (!messageId) return;
+
 		valueLoc = value.expression.loc!;
-	} else {
+	} else { 
 		return;
 	}
 
-	// Extract position information
-	const [start, end] = valueRange;
-	const startCharInLine = findQuoteStartInLine(sourceCode, start, valueLoc.start);
-	const endCharInLine = findQuoteEndInLine(sourceCode, end, valueLoc.end);
+	// Convert to line-relative, one-based positions excluding quotes
+	const startCharInLine = valueLoc.start.column + 1 + 1; // +1 for quote, +1 for one-based
+	const endCharInLine = valueLoc.end.column + 1; // +1 for one-based, end column is already after the content
 
 	matches.push({
 		messageId,
@@ -207,83 +296,6 @@ function getFunctionName(callee: TSESTree.Expression): string | null {
 	return null;
 }
 
-function findQuoteStartInLine(sourceCode: string, absolutePosition: number, loc: { line: number; column: number }): number {
-	// Find the opening quote and return line-relative character position (after the quote)
-	const char = sourceCode[absolutePosition];
-	if (char === '"' || char === "'") {
-		return loc.column + 1;
-	}
-	return loc.column;
-}
 
-function findQuoteEndInLine(sourceCode: string, absolutePosition: number, loc: { line: number; column: number }): number {
-	// Find the closing quote and return line-relative character position (before the quote)
-	const char = sourceCode[absolutePosition - 1];
-	if (char === '"' || char === "'") {
-		return loc.column - 1;
-	}
-	return loc.column;
-}
 
-/**
- * Fallback regex-based parser for when AST parsing fails
- * Less accurate but handles severely malformed code
- */
-// function parseWithRegexFallback(sourceCode: string, config: ParserConfig): MessageReferenceMatch[] {
-// 	const matches: MessageReferenceMatch[] = [];
 
-// 	// Create regex patterns for function calls
-// 	const functionPattern = new RegExp(
-// 		`\\b(${config.functionNames.join('|')})\\s*\\(\\s*(['"\`])([^'"\`]*?)\\2`,
-// 		'g'
-// 	);
-
-// 	// Create regex patterns for JSX attributes
-// 	const jsxPattern = new RegExp(
-// 		`\\b(${config.jsxAttributes.join('|')})\\s*=\\s*(['"\`])([^'"\`]*?)\\2`,
-// 		'g'
-// 	);
-
-// 	// Find function call matches
-// 	let match;
-// 	while ((match = functionPattern.exec(sourceCode)) !== null) {
-// 		const messageId = match[3];
-// 		const fullMatch = match[0];
-// 		const startIndex = match.index + fullMatch.indexOf(match[2]) + 1; // After opening quote
-// 		const endIndex = startIndex + messageId.length;
-
-// 		matches.push({
-// 			messageId,
-// 			position: {
-// 				start: getLineAndColumn(sourceCode, startIndex),
-// 				end: getLineAndColumn(sourceCode, endIndex)
-// 			}
-// 		});
-// 	}
-
-// 	// Find JSX attribute matches
-// 	while ((match = jsxPattern.exec(sourceCode)) !== null) {
-// 		const messageId = match[3];
-// 		const fullMatch = match[0];
-// 		const startIndex = match.index + fullMatch.indexOf(match[2]) + 1; // After opening quote
-// 		const endIndex = startIndex + messageId.length;
-
-// 		matches.push({
-// 			messageId,
-// 			position: {
-// 				start: getLineAndColumn(sourceCode, startIndex),
-// 				end: getLineAndColumn(sourceCode, endIndex)
-// 			}
-// 		});
-// 	}
-
-// 	return matches;
-// }
-
-// function getLineAndColumn(sourceCode: string, index: number): { line: number; character: number } {
-// 	const lines = sourceCode.substring(0, index).split('\n');
-// 	return {
-// 		line: lines.length,
-// 		character: lines[lines.length - 1].length
-// 	};
-// }
