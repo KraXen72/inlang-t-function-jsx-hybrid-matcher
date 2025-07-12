@@ -6,7 +6,7 @@ const isProduction = process.env.NODE_ENV === "production";
 const ctx = await context({
 	entryPoints: ["./src/index.ts"],
 	outdir: "./dist",
-	minify: false,
+	minify: isProduction,
 	// ----------------------------------
 	// allow top level await
 	// https://caniuse.com/mdn-javascript_operators_await_top_level
