@@ -1,5 +1,6 @@
 import { parse as parseTypeScript } from '@typescript-eslint/typescript-estree';
 import type { TSESTree } from '@typescript-eslint/typescript-estree';
+import type { IPluginSettings } from '../settings';
 
 interface MessageReferenceMatch {
 	messageId: string;
@@ -15,24 +16,19 @@ interface MessageReferenceMatch {
 	};
 }
 
-interface ParserConfig {
-	functionNames: string[];
-	jsxAttributes: string[];
-}
-
 // Default configuration - can be made configurable later
-const DEFAULT_CONFIG: ParserConfig = {
-	functionNames: ['t', 'translate', 'i18n'],
-	jsxAttributes: ['tx', 'i18nKey', 'translationKey']
+const DEFAULT_CONFIG: IPluginSettings = {
+	recognizedTfuncNames: ['t', 'translate', 'i18n'],
+	recognizedJSXAttributes: ['tx', 'i18nKey', 'translationKey']
 };
 
 /**
  * Enhanced parser using TypeScript ESTree for robust JSX/TSX parsing
  * Handles both function calls and JSX attributes with proper error recovery
  */
-export function parse(sourceCode: string, config: ParserConfig = DEFAULT_CONFIG): MessageReferenceMatch[] {
+export function parse(sourceCode: string, config: IPluginSettings = DEFAULT_CONFIG): MessageReferenceMatch[] {
 	const matches: MessageReferenceMatch[] = [];
-	
+
 	try {
 		// Parse with TypeScript ESTree - handles JSX/TSX robustly
 		const ast = parseTypeScript(sourceCode, {
@@ -48,20 +44,23 @@ export function parse(sourceCode: string, config: ParserConfig = DEFAULT_CONFIG)
 
 		// Traverse the AST to find matches
 		traverseNode(ast, sourceCode, matches, config);
-		
+
 	} catch (error) {
+		console.error("parsing failed: ", error);
+		return []
+
 		// If parsing fails completely, try to extract simple patterns with regex fallback
-		return parseWithRegexFallback(sourceCode, config);
+		// return parseWithRegexFallback(sourceCode, config);
 	}
 
 	return matches;
 }
 
 function traverseNode(
-	node: any, 
-	sourceCode: string, 
-	matches: MessageReferenceMatch[], 
-	config: ParserConfig
+	node: any,
+	sourceCode: string,
+	matches: MessageReferenceMatch[],
+	config: IPluginSettings
 ): void {
 	if (!node || typeof node !== 'object') return;
 
@@ -69,7 +68,7 @@ function traverseNode(
 	if (node.type === 'CallExpression') {
 		handleFunctionCall(node, sourceCode, matches, config);
 	}
-	
+
 	// Handle JSX attributes: <Text tx="message" />
 	if (node.type === 'JSXAttribute') {
 		handleJSXAttribute(node, sourceCode, matches, config);
@@ -87,14 +86,14 @@ function traverseNode(
 }
 
 function handleFunctionCall(
-	node: TSESTree.CallExpression, 
-	sourceCode: string, 
-	matches: MessageReferenceMatch[], 
-	config: ParserConfig
+	node: TSESTree.CallExpression,
+	sourceCode: string,
+	matches: MessageReferenceMatch[],
+	config: IPluginSettings
 ): void {
 	// Check if it's a function we're interested in
 	const functionName = getFunctionName(node.callee);
-	if (!functionName || !config.functionNames.includes(functionName)) {
+	if (!functionName || !config?.recognizedTfuncNames || !config.recognizedTfuncNames.includes(functionName)) {
 		return;
 	}
 
@@ -108,11 +107,11 @@ function handleFunctionCall(
 	if (firstArg.range && firstArg.loc) {
 		const messageId = firstArg.value;
 		const [start, end] = firstArg.range;
-		
+
 		// Adjust positions to exclude quotes
 		const startPos = findQuoteStart(sourceCode, start);
 		const endPos = findQuoteEnd(sourceCode, end);
-		
+
 		matches.push({
 			messageId,
 			position: {
@@ -130,16 +129,16 @@ function handleFunctionCall(
 }
 
 function handleJSXAttribute(
-	node: TSESTree.JSXAttribute, 
-	sourceCode: string, 
-	matches: MessageReferenceMatch[], 
-	config: ParserConfig
+	node: TSESTree.JSXAttribute,
+	sourceCode: string,
+	matches: MessageReferenceMatch[],
+	config: IPluginSettings
 ): void {
 	// Check if it's an attribute we're interested in
 	if (node.name.type !== 'JSXIdentifier') return;
-	
+
 	const attributeName = node.name.name;
-	if (!config.jsxAttributes.includes(attributeName)) {
+	if (!attributeName || !config.recognizedJSXAttributes || !config.recognizedJSXAttributes.includes(attributeName)) {
 		return;
 	}
 
@@ -156,17 +155,19 @@ function handleJSXAttribute(
 		messageId = value.value;
 		valueRange = value.range!;
 		valueLoc = value.loc!;
-	} else if (value.type === 'JSXExpressionContainer' && 
-			   value.expression.type === 'Literal' && 
-			   typeof value.expression.value === 'string') {
+	} else if (
+		value.type === 'JSXExpressionContainer' &&
+		value.expression.type === 'Literal' &&
+		typeof value.expression.value === 'string') {
 		// Expression with string: tx={"message"}
 		messageId = value.expression.value;
 		valueRange = value.expression.range!;
 		valueLoc = value.expression.loc!;
-	} else if (value.type === 'JSXExpressionContainer' && 
-			   value.expression.type === 'TemplateLiteral' && 
-			   value.expression.expressions.length === 0 &&
-			   value.expression.quasis.length === 1) {
+	} else if (
+		value.type === 'JSXExpressionContainer' &&
+		value.expression.type === 'TemplateLiteral' &&
+		value.expression.expressions.length === 0 &&
+		value.expression.quasis.length === 1) {
 		// Template literal without interpolation: tx={`message`}
 		messageId = value.expression.quasis[0].value.cooked || value.expression.quasis[0].value.raw;
 		valueRange = value.expression.range!;
@@ -179,7 +180,7 @@ function handleJSXAttribute(
 	const [start, end] = valueRange;
 	const startPos = findQuoteStart(sourceCode, start);
 	const endPos = findQuoteEnd(sourceCode, end);
-	
+
 	matches.push({
 		messageId,
 		position: {
@@ -227,61 +228,61 @@ function findQuoteEnd(sourceCode: string, position: number): number {
  * Fallback regex-based parser for when AST parsing fails
  * Less accurate but handles severely malformed code
  */
-function parseWithRegexFallback(sourceCode: string, config: ParserConfig): MessageReferenceMatch[] {
-	const matches: MessageReferenceMatch[] = [];
-	
-	// Create regex patterns for function calls
-	const functionPattern = new RegExp(
-		`\\b(${config.functionNames.join('|')})\\s*\\(\\s*(['"\`])([^'"\`]*?)\\2`,
-		'g'
-	);
-	
-	// Create regex patterns for JSX attributes
-	const jsxPattern = new RegExp(
-		`\\b(${config.jsxAttributes.join('|')})\\s*=\\s*(['"\`])([^'"\`]*?)\\2`,
-		'g'
-	);
-	
-	// Find function call matches
-	let match;
-	while ((match = functionPattern.exec(sourceCode)) !== null) {
-		const messageId = match[3];
-		const fullMatch = match[0];
-		const startIndex = match.index + fullMatch.indexOf(match[2]) + 1; // After opening quote
-		const endIndex = startIndex + messageId.length;
-		
-		matches.push({
-			messageId,
-			position: {
-				start: getLineAndColumn(sourceCode, startIndex),
-				end: getLineAndColumn(sourceCode, endIndex)
-			}
-		});
-	}
-	
-	// Find JSX attribute matches
-	while ((match = jsxPattern.exec(sourceCode)) !== null) {
-		const messageId = match[3];
-		const fullMatch = match[0];
-		const startIndex = match.index + fullMatch.indexOf(match[2]) + 1; // After opening quote
-		const endIndex = startIndex + messageId.length;
-		
-		matches.push({
-			messageId,
-			position: {
-				start: getLineAndColumn(sourceCode, startIndex),
-				end: getLineAndColumn(sourceCode, endIndex)
-			}
-		});
-	}
-	
-	return matches;
-}
+// function parseWithRegexFallback(sourceCode: string, config: ParserConfig): MessageReferenceMatch[] {
+// 	const matches: MessageReferenceMatch[] = [];
 
-function getLineAndColumn(sourceCode: string, index: number): { line: number; character: number } {
-	const lines = sourceCode.substring(0, index).split('\n');
-	return {
-		line: lines.length - 1,
-		character: lines[lines.length - 1].length
-	};
-}
+// 	// Create regex patterns for function calls
+// 	const functionPattern = new RegExp(
+// 		`\\b(${config.functionNames.join('|')})\\s*\\(\\s*(['"\`])([^'"\`]*?)\\2`,
+// 		'g'
+// 	);
+
+// 	// Create regex patterns for JSX attributes
+// 	const jsxPattern = new RegExp(
+// 		`\\b(${config.jsxAttributes.join('|')})\\s*=\\s*(['"\`])([^'"\`]*?)\\2`,
+// 		'g'
+// 	);
+
+// 	// Find function call matches
+// 	let match;
+// 	while ((match = functionPattern.exec(sourceCode)) !== null) {
+// 		const messageId = match[3];
+// 		const fullMatch = match[0];
+// 		const startIndex = match.index + fullMatch.indexOf(match[2]) + 1; // After opening quote
+// 		const endIndex = startIndex + messageId.length;
+
+// 		matches.push({
+// 			messageId,
+// 			position: {
+// 				start: getLineAndColumn(sourceCode, startIndex),
+// 				end: getLineAndColumn(sourceCode, endIndex)
+// 			}
+// 		});
+// 	}
+
+// 	// Find JSX attribute matches
+// 	while ((match = jsxPattern.exec(sourceCode)) !== null) {
+// 		const messageId = match[3];
+// 		const fullMatch = match[0];
+// 		const startIndex = match.index + fullMatch.indexOf(match[2]) + 1; // After opening quote
+// 		const endIndex = startIndex + messageId.length;
+
+// 		matches.push({
+// 			messageId,
+// 			position: {
+// 				start: getLineAndColumn(sourceCode, startIndex),
+// 				end: getLineAndColumn(sourceCode, endIndex)
+// 			}
+// 		});
+// 	}
+
+// 	return matches;
+// }
+
+// function getLineAndColumn(sourceCode: string, index: number): { line: number; character: number } {
+// 	const lines = sourceCode.substring(0, index).split('\n');
+// 	return {
+// 		line: lines.length - 1,
+// 		character: lines[lines.length - 1].length
+// 	};
+// }

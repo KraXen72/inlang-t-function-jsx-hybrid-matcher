@@ -1,0 +1,10 @@
+{
+	"$schema": "https://inlang.com/schema/marketplace-manifest",
+	"id": "plugin.minibits.inlangmatcher",
+	"displayName": {
+		"en": "t-function JSX hybrid matcher"
+	},
+	"description": {
+		"en": "t-function JSX hybrid matcher"
+	}
+}

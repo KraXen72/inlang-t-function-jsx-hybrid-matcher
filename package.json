@@ -4,15 +4,22 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "build": "tsc --noEmit"
+    "build": "NODE_ENV=production node ./build.js",
+    "dev": " node ./build.js",
+    "test": "NODE_ENV=production node ./build.js && vitest run",
+    "test2": "NODE_ENV=production node ./build.js && vitest run ./tests/ownName.test.ts"
   },
   "dependencies": {
+    "@inlang/plugin": "^2.4.14",
+    "@sinclair/typebox": "^0.34.37",
     "@typescript-eslint/typescript-estree": "^6.21.0"
   },
   "devDependencies": {
-    "typescript": "^5.5.3",
+    "@inlang/cli": "^3.0.12",
+    "@inlang/sdk": "^2.4.9",
+    "@lix-js/client": "^2.2.1",
+    "esbuild": "^0.25.6",
+    "typescript": "^5.8.3",
     "vitest": "^3.2.4"
   }
 }
