@@ -2,6 +2,8 @@ import type { CustomApiInlangIdeExtension, Plugin } from "@inlang/plugin";
 import type { IPluginSettings } from "../settings.js";
 import { parse } from "./messageReferenceMatchers.js";
 
+type EMOcallbackArgs = { bundleId: string, selection: string }
+
 export const ideExtensionConfigFactory = (
 	settings: IPluginSettings
 ): ReturnType<Exclude<Plugin["addCustomApi"], undefined>> => ({
@@ -14,21 +16,21 @@ export const ideExtensionConfigFactory = (
 		
 		extractMessageOptions: [
 			{
-				callback: (args: { messageId: string }) => ({
-					messageId: args.messageId,
-					messageReplacement: `"${args.messageId}"`,
+				callback: (args: EMOcallbackArgs) => ({
+					bundleId: args.bundleId,
+					messageReplacement: `"${args.bundleId}"`,
 				}),
 			},
 			{
-				callback: (args: { messageId: string }) => ({
-					messageId: args.messageId,
-					messageReplacement: `${settings?.preferredTfuncName ?? 't'}("${args.messageId}")`,
+				callback: (args: EMOcallbackArgs) => ({
+					bundleId: args.bundleId,
+					messageReplacement: `${settings?.preferredTfuncName ?? 't'}("${args.bundleId}")`,
 				}),
 			},
 			{
-				callback: (args: { messageId: string }) => ({
-					messageId: args.messageId,
-					messageReplacement: `{${settings?.preferredTfuncName ?? 't'}("${args.messageId}")}`,
+				callback: (args: EMOcallbackArgs) => ({
+					bundleId: args.bundleId,
+					messageReplacement: `{${settings?.preferredTfuncName ?? 't'}("${args.bundleId}")}`,
 				}),
 			}
 		],
@@ -40,5 +42,6 @@ export const ideExtensionConfigFactory = (
 			{ language: "astro", },
 			{ language: "vue", },
 		],
+		
 	} satisfies CustomApiInlangIdeExtension,
 })
