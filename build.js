@@ -1,5 +1,6 @@
 import { context } from "esbuild";
 import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill';
+import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill';
 import { readFileSync } from 'node:fs';
 import { extname, dirname as _dirname } from "node:path";
 
@@ -61,6 +62,7 @@ const ctx = await context({
 	sourcemap: false,
 	plugins: [
 		NodeModulesPolyfillPlugin(),
+		NodeGlobalsPolyfillPlugin(),
 		{
 			name: 'tty-mock',
 			setup(build) {
