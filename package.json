@@ -10,9 +10,10 @@
     "test2": "NODE_ENV=production node ./build.js && vitest run ./tests/ownName.test.ts"
   },
   "dependencies": {
+    "@babel/parser": "^7.28.0",
+    "@babel/types": "^7.28.1",
     "@inlang/plugin": "^2.4.14",
-    "@sinclair/typebox": "^0.34.37",
-    "@typescript-eslint/typescript-estree": "^6.21.0"
+    "@sinclair/typebox": "^0.34.37"
   },
   "devDependencies": {
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
