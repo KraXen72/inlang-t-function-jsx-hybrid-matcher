@@ -12,7 +12,7 @@
 - **Plugin Type**: Inlang marketplace plugin for i18n message matching
 - **Entry Point**: `src/index.ts` exports default plugin
 - **Core Logic**: `src/plugin.ts` defines plugin metadata and API
-- **Parser**: `src/ideExtension/messageReferenceMatchers.ts` - TSX/JSX parser using @typescript-eslint/typescript-estree
+- **Parser**: `src/ideExtension/messageReferenceMatchers.ts` - TSX/JSX parser using @babel/parser
 - **Settings**: `src/settings.ts` - TypeBox schema for plugin configuration
 - **Build**: Custom esbuild config in `build.js` (ESM, Node platform, ES2022)
 
