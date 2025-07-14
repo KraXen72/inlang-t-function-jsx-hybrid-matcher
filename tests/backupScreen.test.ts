@@ -50,12 +50,12 @@ export const BackupScreen = () => {
                 subTx="backupScreen.recoveryToolDescription"
             />
             <ListItem
-                tx="backupScreen.removeSpentCoins"
+                tx={"backupScreen.removeSpentCoins"}
                 subTx="backupScreen.removeSpentCoinsDescription"
             />
             <ListItem
                 tx="increaseRecoveryIndexes"
-                subTx="increaseRecoveryIndexesDesc"
+                subTx={"increaseRecoveryIndexesDesc"}
             />
             <ResultModalInfo
                 title={translate(isLocalBackupOn ? 'localBackupEnabled' : 'localBackupDisabled')}
@@ -178,8 +178,8 @@ it("should detect backupscreen tx and subTx keys properly", async () => {
 	expect(matches[13]).toEqual({
 		messageId: "backupScreen.removeSpentCoins",
 		position: {
-			start: { line: 45, character: 21 },
-			end: { line: 45, character: 51 }
+			start: { line: 45, character: 22 },
+			end: { line: 45, character: 52 }
 		}
 	});
 	
@@ -202,8 +202,8 @@ it("should detect backupscreen tx and subTx keys properly", async () => {
 	expect(matches[16]).toEqual({
 		messageId: "increaseRecoveryIndexesDesc",
 		position: {
-			start: { line: 50, character: 24 },
-			end: { line: 50, character: 52 }
+			start: { line: 50, character: 25 },
+			end: { line: 50, character: 53 }
 		}
 	});
 });

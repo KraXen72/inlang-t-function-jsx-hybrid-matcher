@@ -14,20 +14,26 @@ export const ideExtensionConfigFactory = (
 			},
 		],
 		
+		// previously it was messageId, now they changed it to bundleId
+		// but i guess we're still using the old types bc the whole addCustomApi thing
+		// either changed or dissapeared if we migrate from @inlang/plugin to @inlang/sdk
 		extractMessageOptions: [
 			{
+				// @ts-ignore
 				callback: (args: EMOcallbackArgs) => ({
 					bundleId: args.bundleId,
 					messageReplacement: `"${args.bundleId}"`,
 				}),
 			},
 			{
+				// @ts-ignore
 				callback: (args: EMOcallbackArgs) => ({
 					bundleId: args.bundleId,
 					messageReplacement: `${settings?.preferredTfuncName ?? 't'}("${args.bundleId}")`,
 				}),
 			},
 			{
+				// @ts-ignore
 				callback: (args: EMOcallbackArgs) => ({
 					bundleId: args.bundleId,
 					messageReplacement: `{${settings?.preferredTfuncName ?? 't'}("${args.bundleId}")}`,

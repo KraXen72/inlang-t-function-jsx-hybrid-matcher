@@ -1,10 +1,19 @@
 # inlang-t-function-jsx-hybrid-matcher
-this plugin is an extended version of the official `t-function matcher` plugin, made to also support JSX attributes.  
+This is meant for inlang's sherlock extension to ease working with react/react-native apps that opted in to the inlang ecosystem.  
+The actual i18n library can be different, what's important is that the   
   
-## features/changes
-- [x] support several custom translate function names (instead of just `t`)
-- [x] add gui configuration in sherlock VSCode extension
-- [x] support custom JSX attributes on react components (see screenshot below)
+- this plugin was originally based on the official `t-function matcher` plugin.  
+- it was later fully rewritten to use [@babel/parser](https://babeljs.io/docs/babel-parser) since parsing nested jsx with Parsimmon's regex parsing language is brittle & unreliable
+
+  
+## features
+- support arbitrary function calls (configurable, instead of just `t`)
+	- e.g. `translate("some-id")`, `t("other-id")`, `myFunc("third-id")`
+- support arbitrary jsx attributes (configurable)
+	- e.g. `<Text tx="some-id" />`, `<Card titleTx="cardTitle" subTx="cardDesc"`
+- add configuration in sherlock VSCode extension
+	- config GUI might not work. 
+	- in case config GUI doesen't, feel free to just configure it using the `settings.json` file in the `project.inlang` folder
   
 ![main screenshot](screenshots/screenie1.png)  
   
