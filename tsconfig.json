@@ -1,5 +1,9 @@
 {
   "compilerOptions": {
+	"include": ["src/**/*"],
+	"compilerOptions": {
+		"resolveJsonModule": true
+	},
     /* Base Options: */
     "esModuleInterop": true,
     "skipLibCheck": true,
