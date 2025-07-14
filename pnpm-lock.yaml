@@ -11,9 +11,6 @@ importers:
       '@babel/parser':
         specifier: ^7.28.0
         version: 7.28.0
-      '@babel/types':
-        specifier: ^7.28.1
-        version: 7.28.1
       '@inlang/plugin':
         specifier: ^2.4.14
         version: 2.4.14(@sinclair/typebox@0.34.37)
@@ -21,6 +18,9 @@ importers:
         specifier: ^0.34.37
         version: 0.34.37
     devDependencies:
+      '@babel/types':
+        specifier: ^7.28.1
+        version: 7.28.1
       '@esbuild-plugins/node-globals-polyfill':
         specifier: ^0.2.3
         version: 0.2.3(esbuild@0.25.6)
@@ -36,6 +36,9 @@ importers:
       '@lix-js/client':
         specifier: ^2.2.1
         version: 2.2.1
+      '@types/node':
+        specifier: ^24.0.13
+        version: 24.0.13
       esbuild:
         specifier: ^0.25.6
         version: 0.25.6

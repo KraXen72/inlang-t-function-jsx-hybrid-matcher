@@ -8,7 +8,7 @@ import type {
 import type { IPluginSettings } from '../settings';
 
 /**
- * it's suppsosed to return 1 extra character worth of col. offset at the end,
+ * it's supposed to return 1 extra character worth of col. offset at the end,
  * to place the message there nicely (after the string has ended)
  */
 interface MessageReferenceMatch {

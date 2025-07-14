@@ -11,16 +11,17 @@
   },
   "dependencies": {
     "@babel/parser": "^7.28.0",
-    "@babel/types": "^7.28.1",
     "@inlang/plugin": "^2.4.14",
     "@sinclair/typebox": "^0.34.37"
   },
   "devDependencies": {
+    "@babel/types": "^7.28.1",
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
     "@inlang/cli": "^3.0.12",
     "@inlang/sdk": "^2.4.9",
     "@lix-js/client": "^2.2.1",
+    "@types/node": "^24.0.13",
     "esbuild": "^0.25.6",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"
