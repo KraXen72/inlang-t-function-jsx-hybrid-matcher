@@ -31,7 +31,7 @@ describe("messageReferenceMatchers", () => {
     `;
     const matches = parse(sourceCode, testConfig);
     expect(matches).toHaveLength(1);
-    expect(matches[0]?.messageId).toBe("some-id");
+    expect(matches[0]?.bundleId).toBe("some-id");
     expect(matches[0]?.position.start.character).toBe(18);
     expect(matches[0]?.position.end.character).toBe(26);
     expect(
@@ -48,7 +48,7 @@ describe("messageReferenceMatchers", () => {
   `;
     const matches = parse(sourceCode, testConfig);
     expect(matches).toHaveLength(1);
-    expect(matches[0]?.messageId).toBe("some-id");
+    expect(matches[0]?.bundleId).toBe("some-id");
     expect(matches[0]?.position.start.character).toBe(18);
     expect(matches[0]?.position.end.character).toBe(26);
   });
@@ -59,7 +59,7 @@ describe("messageReferenceMatchers", () => {
     `;
     const matches = parse(sourceCode, testConfig);
     expect(matches).toHaveLength(1);
-    expect(matches[0]?.messageId).toBe("some-id");
+    expect(matches[0]?.bundleId).toBe("some-id");
     expect(matches[0]?.position.start.character).toBe(12);
     expect(matches[0]?.position.end.character).toBe(20);
   });
