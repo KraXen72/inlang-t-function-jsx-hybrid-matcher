@@ -71,7 +71,7 @@ it("should detect backupscreen tx and subTx keys properly", async () => {
 	
 	// Function calls with translate()
 	expect(matches[0]).toEqual({
-		messageId: "backupScreen.result",
+		bundleId: "backupScreen.result",
 		position: {
 			start: { line: 7, character: 26 },
 			end: { line: 7, character: 46 }
@@ -79,7 +79,7 @@ it("should detect backupscreen tx and subTx keys properly", async () => {
 	});
 	
 	expect(matches[1]).toEqual({
-		messageId: "noSpentEcashFound",
+		bundleId: "noSpentEcashFound",
 		position: {
 			start: { line: 11, character: 28 },
 			end: { line: 11, character: 46 }
@@ -87,7 +87,7 @@ it("should detect backupscreen tx and subTx keys properly", async () => {
 	});
 	
 	expect(matches[2]).toEqual({
-		messageId: "backupScreen.success",
+		bundleId: "backupScreen.success",
 		position: {
 			start: { line: 16, character: 47 },
 			end: { line: 16, character: 68 }
@@ -95,7 +95,7 @@ it("should detect backupscreen tx and subTx keys properly", async () => {
 	});
 	
 	expect(matches[3]).toEqual({
-		messageId: "backupScreen.deletedSuccess",
+		bundleId: "backupScreen.deletedSuccess",
 		position: {
 			start: { line: 19, character: 43 },
 			end: { line: 19, character: 71 }
@@ -103,7 +103,7 @@ it("should detect backupscreen tx and subTx keys properly", async () => {
 	});
 	
 	expect(matches[4]).toEqual({
-		messageId: "recoveryIndexesIncSuccess",
+		bundleId: "recoveryIndexesIncSuccess",
 		position: {
 			start: { line: 23, character: 28 },
 			end: { line: 23, character: 54 }
@@ -112,7 +112,7 @@ it("should detect backupscreen tx and subTx keys properly", async () => {
 	
 	// JSX attributes - tx and subTx
 	expect(matches[5]).toEqual({
-		messageId: "backupScreen.remoteBackup",
+		bundleId: "backupScreen.remoteBackup",
 		position: {
 			start: { line: 29, character: 21 },
 			end: { line: 29, character: 47 }
@@ -120,7 +120,7 @@ it("should detect backupscreen tx and subTx keys properly", async () => {
 	});
 	
 	expect(matches[6]).toEqual({
-		messageId: "backupScreen.remoteBackupDescription",
+		bundleId: "backupScreen.remoteBackupDescription",
 		position: {
 			start: { line: 30, character: 24 },
 			end: { line: 30, character: 61 }
@@ -128,7 +128,7 @@ it("should detect backupscreen tx and subTx keys properly", async () => {
 	});
 	
 	expect(matches[7]).toEqual({
-		messageId: "walletAddressRecovery",
+		bundleId: "walletAddressRecovery",
 		position: {
 			start: { line: 33, character: 21 },
 			end: { line: 33, character: 43 }
@@ -136,7 +136,7 @@ it("should detect backupscreen tx and subTx keys properly", async () => {
 	});
 	
 	expect(matches[8]).toEqual({
-		messageId: "walletAddressRecoveryDesc",
+		bundleId: "walletAddressRecoveryDesc",
 		position: {
 			start: { line: 34, character: 24 },
 			end: { line: 34, character: 50 }
@@ -144,7 +144,7 @@ it("should detect backupscreen tx and subTx keys properly", async () => {
 	});
 	
 	expect(matches[9]).toEqual({
-		messageId: "backupScreen.localBackup",
+		bundleId: "backupScreen.localBackup",
 		position: {
 			start: { line: 37, character: 21 },
 			end: { line: 37, character: 46 }
@@ -152,7 +152,7 @@ it("should detect backupscreen tx and subTx keys properly", async () => {
 	});
 	
 	expect(matches[10]).toEqual({
-		messageId: "backupScreen.localBackupDescription",
+		bundleId: "backupScreen.localBackupDescription",
 		position: {
 			start: { line: 38, character: 24 },
 			end: { line: 38, character: 60 }
@@ -160,7 +160,7 @@ it("should detect backupscreen tx and subTx keys properly", async () => {
 	});
 	
 	expect(matches[11]).toEqual({
-		messageId: "backupScreen.recoveryTool",
+		bundleId: "backupScreen.recoveryTool",
 		position: {
 			start: { line: 41, character: 21 },
 			end: { line: 41, character: 47 }
@@ -168,7 +168,7 @@ it("should detect backupscreen tx and subTx keys properly", async () => {
 	});
 	
 	expect(matches[12]).toEqual({
-		messageId: "backupScreen.recoveryToolDescription",
+		bundleId: "backupScreen.recoveryToolDescription",
 		position: {
 			start: { line: 42, character: 24 },
 			end: { line: 42, character: 61 }
@@ -176,7 +176,7 @@ it("should detect backupscreen tx and subTx keys properly", async () => {
 	});
 	
 	expect(matches[13]).toEqual({
-		messageId: "backupScreen.removeSpentCoins",
+		bundleId: "backupScreen.removeSpentCoins",
 		position: {
 			start: { line: 45, character: 22 },
 			end: { line: 45, character: 52 }
@@ -184,7 +184,7 @@ it("should detect backupscreen tx and subTx keys properly", async () => {
 	});
 	
 	expect(matches[14]).toEqual({
-		messageId: "backupScreen.removeSpentCoinsDescription",
+		bundleId: "backupScreen.removeSpentCoinsDescription",
 		position: {
 			start: { line: 46, character: 24 },
 			end: { line: 46, character: 65 }
@@ -192,7 +192,7 @@ it("should detect backupscreen tx and subTx keys properly", async () => {
 	});
 	
 	expect(matches[15]).toEqual({
-		messageId: "increaseRecoveryIndexes",
+		bundleId: "increaseRecoveryIndexes",
 		position: {
 			start: { line: 49, character: 21 },
 			end: { line: 49, character: 45 }
@@ -200,7 +200,7 @@ it("should detect backupscreen tx and subTx keys properly", async () => {
 	});
 	
 	expect(matches[16]).toEqual({
-		messageId: "increaseRecoveryIndexesDesc",
+		bundleId: "increaseRecoveryIndexesDesc",
 		position: {
 			start: { line: 50, character: 25 },
 			end: { line: 50, character: 53 }
