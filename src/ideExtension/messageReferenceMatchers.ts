@@ -12,7 +12,7 @@ import type { IPluginSettings } from '../settings';
  * to place the message there nicely (after the string has ended)
  */
 interface MessageReferenceMatch {
-	messageId: string;
+	bundleId: string;
 	position: {
 		start: {
 			line: number;
@@ -139,7 +139,7 @@ function traverseNode(
 	}
 }
 
-function createPositionObject(messageId: string, loc: SourceLocation): MessageReferenceMatch {
+function createPositionObject(bundleId: string, loc: SourceLocation): MessageReferenceMatch {
 	// Babel parser column offsets are 0-based
 	// inlang's Sherlock expects 1-based column offsets (atleast from what i can tell their t-func matcher is sending from parsimmon)
 	// Babel gives offsets for the raw string, e.g. for:
@@ -149,7 +149,7 @@ function createPositionObject(messageId: string, loc: SourceLocation): MessageRe
 	// to skip the initial ",' or ` we add +1 to the start: { start: 2, end: 10 }
 
 	return {
-		messageId,
+		bundleId,
 		position: {
 			start: {
 				line: loc.start.line,
@@ -183,8 +183,8 @@ function handleFunctionCall(
 
 	// Extract position information
 	if (firstArg.loc) {
-		const messageId = firstArg.value;
-		matches.push(createPositionObject(messageId, firstArg.loc));
+		const bundleId = firstArg.value;
+		matches.push(createPositionObject(bundleId, firstArg.loc));
 	}
 }
 
@@ -206,32 +206,32 @@ function handleJSXAttribute(
 	const value = node.value;
 	if (!value) return;
 
-	let messageId: string;
+	let bundleId: string;
 	let valueLoc: SourceLocation;
 
 	if (value.type === 'StringLiteral' && typeof value.value === 'string') {
 		// Direct string: tx="message"
-		messageId = value.value;
+		bundleId = value.value;
 		valueLoc = value.loc!;
 
 	} else if (value.type === 'JSXExpressionContainer' && value.expression.type === 'StringLiteral' && typeof value.expression.value === 'string') {
 		// Expression with string: tx={"message"}
-		messageId = value.expression.value;
+		bundleId = value.expression.value;
 		valueLoc = value.expression.loc!;
 
 	} else if (value.type === 'JSXExpressionContainer' && value.expression.type === 'TemplateLiteral' && value.expression.expressions.length === 0 && value.expression.quasis.length === 1) {
 		// Template literal without interpolation: tx={`message`}
 		const quasiValue = value.expression.quasis[0]?.value;
 		if (!quasiValue || (!quasiValue.cooked && !quasiValue.raw)) return;
-		messageId = quasiValue.cooked || quasiValue.raw || '';
-		if (!messageId) return;
+		bundleId = quasiValue.cooked || quasiValue.raw || '';
+		if (!bundleId) return;
 
 		valueLoc = value.expression.loc!;
 	} else { 
 		return;
 	}
 
-	matches.push(createPositionObject(messageId, valueLoc));
+	matches.push(createPositionObject(bundleId, valueLoc));
 }
 
 function getFunctionName(callee: Expression | any): string | null {
@@ -243,7 +243,6 @@ function getFunctionName(callee: Expression | any): string | null {
 	}
 	return null;
 }
-
 
 
 

@@ -1,4 +1,3 @@
-import type { InlangPlugin } from "@inlang/sdk";
 import type { IPluginSettings } from "../settings.js";
 import { parse } from "./messageReferenceMatchers.js";
 
