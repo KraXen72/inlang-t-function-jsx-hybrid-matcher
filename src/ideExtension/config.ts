@@ -1,7 +1,7 @@
 import type { IPluginSettings } from "../settings.js";
 import { parse } from "./messageReferenceMatchers.js";
 
-type EMOcallbackArgs = { bundleId: string, selection: string }
+type EMOcallbackArgs = { messageId: string, selection: string }
 
 export const ideExtensionConfigFactory = (
 	settings: IPluginSettings
@@ -15,20 +15,20 @@ export const ideExtensionConfigFactory = (
 	extractMessageOptions: [
 		{
 			callback: (args: EMOcallbackArgs) => ({
-				bundleId: args.bundleId,
-				messageReplacement: `"${args.bundleId}"`,
+				messageId: args.messageId,
+				messageReplacement: `"${args.messageId}"`,
 			}),
 		},
 		{
 			callback: (args: EMOcallbackArgs) => ({
-				bundleId: args.bundleId,
-				messageReplacement: `${settings?.preferredTfuncName ?? 't'}("${args.bundleId}")`,
+				messageId: args.messageId,
+				messageReplacement: `${settings?.preferredTfuncName ?? 't'}("${args.messageId}")`,
 			}),
 		},
 		{
 			callback: (args: EMOcallbackArgs) => ({
-				bundleId: args.bundleId,
-				messageReplacement: `{${settings?.preferredTfuncName ?? 't'}("${args.bundleId}")}`,
+				messageId: args.messageId,
+				messageReplacement: `{${settings?.preferredTfuncName ?? 't'}("${args.messageId}")}`,
 			}),
 		}
 	],

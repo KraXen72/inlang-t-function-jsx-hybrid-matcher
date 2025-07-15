@@ -17730,7 +17730,7 @@ function traverseNode(node, sourceCode, matches, config2) {
 }
 function createPositionObject(bundleId, loc) {
   return {
-    bundleId,
+    messageId: bundleId,
     position: {
       start: {
         line: loc.start.line,
@@ -17804,20 +17804,20 @@ var ideExtensionConfigFactory = (settings) => ({
   extractMessageOptions: [
     {
       callback: (args) => ({
-        bundleId: args.bundleId,
-        messageReplacement: `"${args.bundleId}"`
+        messageId: args.messageId,
+        messageReplacement: `"${args.messageId}"`
       })
     },
     {
       callback: (args) => ({
-        bundleId: args.bundleId,
-        messageReplacement: `${settings?.preferredTfuncName ?? "t"}("${args.bundleId}")`
+        messageId: args.messageId,
+        messageReplacement: `${settings?.preferredTfuncName ?? "t"}("${args.messageId}")`
       })
     },
     {
       callback: (args) => ({
-        bundleId: args.bundleId,
-        messageReplacement: `{${settings?.preferredTfuncName ?? "t"}("${args.bundleId}")}`
+        messageId: args.messageId,
+        messageReplacement: `{${settings?.preferredTfuncName ?? "t"}("${args.messageId}")}`
       })
     }
   ],
@@ -17852,7 +17852,7 @@ var plugin = {
   description,
   settingsSchema: PluginSettings,
   meta: (settings) => ({
-    "app.inlang.ideExtension": ideExtensionConfigFactory(settings["plugin.minibits.inlangmatcher"])
+    "app.inlang.ideExtension": ideExtensionConfigFactory(settings[id])
   })
 };
 

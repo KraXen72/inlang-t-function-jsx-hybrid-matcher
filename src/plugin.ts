@@ -15,6 +15,6 @@ export const plugin: InlangPlugin<{
 	description,
 	settingsSchema: PluginSettings,
 	meta: (settings) => ({
-		"app.inlang.ideExtension": ideExtensionConfigFactory(settings["plugin.minibits.inlangmatcher"])
+		"app.inlang.ideExtension": ideExtensionConfigFactory(settings[id])
 	})
 }

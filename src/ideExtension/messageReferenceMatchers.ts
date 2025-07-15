@@ -12,7 +12,7 @@ import type { IPluginSettings } from '../settings';
  * to place the message there nicely (after the string has ended)
  */
 interface MessageReferenceMatch {
-	bundleId: string;
+	messageId: string;
 	position: {
 		start: {
 			line: number;
@@ -149,7 +149,7 @@ function createPositionObject(bundleId: string, loc: SourceLocation): MessageRef
 	// to skip the initial ",' or ` we add +1 to the start: { start: 2, end: 10 }
 
 	return {
-		bundleId,
+		messageId: bundleId,
 		position: {
 			start: {
 				line: loc.start.line,
