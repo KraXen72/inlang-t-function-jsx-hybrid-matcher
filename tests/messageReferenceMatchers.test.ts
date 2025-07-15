@@ -31,7 +31,7 @@ describe("messageReferenceMatchers", () => {
     `;
     const matches = parse(sourceCode, testConfig);
     expect(matches).toHaveLength(1);
-    expect(matches[0]?.messageId).toBe("some-id");
+    expect(matches[0]?.bundleId).toBe("some-id");
     expect(matches[0]?.position.start.character).toBe(18);
     expect(matches[0]?.position.end.character).toBe(26);
     expect(
@@ -48,7 +48,7 @@ describe("messageReferenceMatchers", () => {
   `;
     const matches = parse(sourceCode, testConfig);
     expect(matches).toHaveLength(1);
-    expect(matches[0]?.messageId).toBe("some-id");
+    expect(matches[0]?.bundleId).toBe("some-id");
     expect(matches[0]?.position.start.character).toBe(18);
     expect(matches[0]?.position.end.character).toBe(26);
   });
@@ -59,7 +59,7 @@ describe("messageReferenceMatchers", () => {
     `;
     const matches = parse(sourceCode, testConfig);
     expect(matches).toHaveLength(1);
-    expect(matches[0]?.messageId).toBe("some-id");
+    expect(matches[0]?.bundleId).toBe("some-id");
     expect(matches[0]?.position.start.character).toBe(12);
     expect(matches[0]?.position.end.character).toBe(20);
   });
@@ -70,7 +70,7 @@ describe("messageReferenceMatchers", () => {
     `;
     const matches = parse(sourceCode, testConfig);
     expect(matches).toHaveLength(1);
-    expect(matches[0]?.messageId).toBe("some-id");
+    expect(matches[0]?.bundleId).toBe("some-id");
     expect(
       sourceCode.slice(
         matches[0]?.position.start.character,
@@ -93,7 +93,7 @@ describe("messageReferenceMatchers", () => {
     `;
     const matches = parse(sourceCode, testConfig);
     expect(matches).toHaveLength(1);
-    expect(matches[0]?.messageId).toBe("some-id");
+    expect(matches[0]?.bundleId).toBe("some-id");
     expect(matches[0]?.position.start.character).toBe(20)
     expect(matches[0]?.position.end.character).toBe(28)
     expect(
@@ -107,7 +107,7 @@ describe("messageReferenceMatchers", () => {
   it("should detect combined message.attribute ids", () => {
     const sourceCode = ` t('some-message.with-attribute')`;
     const matches = parse(sourceCode, testConfig);
-    expect(matches[0]?.messageId).toBe("some-message.with-attribute");
+    expect(matches[0]?.bundleId).toBe("some-message.with-attribute");
   });
 
   it(`should detect human readable id t("penguin_purple_shoe_window")`, () => {
@@ -116,7 +116,7 @@ describe("messageReferenceMatchers", () => {
   `;
 
     const matches = parse(sourceCode, testConfig);
-    expect(matches[0]?.messageId).toBe("penguin_purple_shoe_window");
+    expect(matches[0]?.bundleId).toBe("penguin_purple_shoe_window");
     expect(matches[0]?.position.start.character).toBe(16);
     expect(matches[0]?.position.end.character).toBe(43);
   });
@@ -148,9 +148,9 @@ describe("messageReferenceMatchers", () => {
     `;
     const matches = parse(sourceCode, testConfig);
     expect(matches).toHaveLength(3);
-    expect(matches[0]?.messageId).toBe("hello-world");
-    expect(matches[1]?.messageId).toBe("404.title");
-    expect(matches[2]?.messageId).toBe("421.message");
+    expect(matches[0]?.bundleId).toBe("hello-world");
+    expect(matches[1]?.bundleId).toBe("404.title");
+    expect(matches[2]?.bundleId).toBe("421.message");
   });
 
   it("should detect JSX attributes", () => {
@@ -161,9 +161,9 @@ describe("messageReferenceMatchers", () => {
   `;
     const matches = parse(sourceCode, testConfig);
     expect(matches).toHaveLength(3);
-    expect(matches[0]?.messageId).toBe("welcome.message");
-    expect(matches[1]?.messageId).toBe("button.submit");
-    expect(matches[2]?.messageId).toBe("dynamic.key");
+    expect(matches[0]?.bundleId).toBe("welcome.message");
+    expect(matches[1]?.bundleId).toBe("button.submit");
+    expect(matches[2]?.bundleId).toBe("dynamic.key");
   });
 
   it("should support configurable function names", () => {
@@ -179,8 +179,8 @@ describe("messageReferenceMatchers", () => {
     };
     const matches = parse(sourceCode, customConfig);
     expect(matches).toHaveLength(2);
-    expect(matches[0]?.messageId).toBe("custom.function");
-    expect(matches[1]?.messageId).toBe("another.function");
+    expect(matches[0]?.bundleId).toBe("custom.function");
+    expect(matches[1]?.bundleId).toBe("another.function");
   });
 
   it("should handle nested JSX with multiple translation calls", () => {
@@ -194,7 +194,7 @@ describe("messageReferenceMatchers", () => {
   `;
     const matches = parse(sourceCode, testConfig);
     expect(matches).toHaveLength(5);
-    expect(matches.map(m => m.messageId)).toEqual([
+    expect(matches.map(m => m.bundleId)).toEqual([
       "page.title",
       "page.subtitle", 
       "page.description",
@@ -212,9 +212,9 @@ describe("messageReferenceMatchers", () => {
   `;
     const matches = parse(sourceCode, testConfig);
     expect(matches).toHaveLength(4); // Should find simple.key, nested.call, true.case, false.case
-    expect(matches.map(m => m.messageId)).toContain("simple.key");
-    expect(matches.map(m => m.messageId)).toContain("nested.call");
-    expect(matches.map(m => m.messageId)).toContain("true.case");
+    expect(matches.map(m => m.bundleId)).toContain("simple.key");
+    expect(matches.map(m => m.bundleId)).toContain("nested.call");
+    expect(matches.map(m => m.bundleId)).toContain("true.case");
   });
 
   it("should handle edge cases with quotes and escaping", () => {
@@ -227,7 +227,7 @@ describe("messageReferenceMatchers", () => {
   `;
     const matches = parse(sourceCode, testConfig);
     expect(matches).toHaveLength(5);
-    expect(matches.map(m => m.messageId)).toEqual([
+    expect(matches.map(m => m.bundleId)).toEqual([
       "message.with.dots",
       "single.quotes",
       "message-with-dashes", 

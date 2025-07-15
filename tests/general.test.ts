@@ -31,7 +31,7 @@ it("should detect a tx attribute in a JSX element", async () => {
 		`;
 	const matches = parse(sourceCode, settings);
 	expect(matches).toHaveLength(1);
-	expect(matches[0]?.messageId).toBe("notFound.title");
+	expect(matches[0]?.bundleId).toBe("notFound.title");
 });
 
 it("should detect a subTx attribute in a JSX element", async () => {
@@ -49,7 +49,7 @@ it("should detect a subTx attribute in a JSX element", async () => {
 		`;
 	const matches = parse(sourceCode, settings);
 	expect(matches).toHaveLength(1);
-	expect(matches[0]?.messageId).toBe("wallet.description");
+	expect(matches[0]?.bundleId).toBe("wallet.description");
 });
 
 it("should detect multiple attributes in nested JSX elements", async () => {
@@ -82,9 +82,9 @@ it("should detect multiple attributes in nested JSX elements", async () => {
 		`;
 	const matches = parse(sourceCode, settings);
 	expect(matches).toHaveLength(3);
-	expect(matches[0]?.messageId).toBe("backupScreen.localBackup");
-	expect(matches[1]?.messageId).toBe("backupScreen.localBackupDescription");
-	expect(matches[2]?.messageId).toBe("payCommon.amountToPayLabel");
+	expect(matches[0]?.bundleId).toBe("backupScreen.localBackup");
+	expect(matches[1]?.bundleId).toBe("backupScreen.localBackupDescription");
+	expect(matches[2]?.bundleId).toBe("payCommon.amountToPayLabel");
 });
 
 it("should detect bracket-wrapped string attributes in JSX", async () => {
@@ -117,7 +117,7 @@ it("should detect bracket-wrapped string attributes in JSX", async () => {
 
 	const matches = parse(sourceCode, settings);
 	expect(matches).toHaveLength(1);
-	expect(matches[0]?.messageId).toBe("transferScreen.requestInvoice");
+	expect(matches[0]?.bundleId).toBe("transferScreen.requestInvoice");
 });
 
 // Duplicate t-function tests removed - see messageReferenceMatchers.test.ts for comprehensive t-function testing
@@ -159,6 +159,6 @@ it("should detect multiple translate function calls", async () => {
 	`
 	const matches = parse(sourceCode, settings)
 	expect(matches).toHaveLength(2)
-	expect(matches[0]?.messageId).toBe("backupScreen.success")
-	expect(matches[1]?.messageId).toBe("backupScreen.deletedSuccess")
+	expect(matches[0]?.bundleId).toBe("backupScreen.success")
+	expect(matches[1]?.bundleId).toBe("backupScreen.deletedSuccess")
 })
