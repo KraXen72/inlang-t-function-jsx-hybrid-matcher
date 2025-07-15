@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@babel/parser": "^7.28.0",
-    "@inlang/plugin": "^2.4.14",
+    "@inlang/sdk": "^2.4.9",
     "@sinclair/typebox": "^0.34.37"
   },
   "devDependencies": {
